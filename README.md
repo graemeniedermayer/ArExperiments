@@ -1,4 +1,4 @@
-# ArExperiments
+# Augmented Reality Experiments
 A set of experiments using augmented reality. WebXR + Threejs are the predominate tools used.
 
 # Caveats
