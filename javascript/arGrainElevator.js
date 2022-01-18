@@ -56,7 +56,7 @@ function init() {
     directionalLight2.position.set( -0.9, -1, -0.2 ).normalize();
     scene.add( directionalLight2 );
 	var loader = new THREE.GLTFLoader()
-	loader.load( 'grainElevator.gltf', function ( gltf ) {
+	loader.load( 'data/grainElevator.gltf', function ( gltf ) {
 		gltf.scene.scale.z = 1
 		gltf.scene.scale.y = 1
 		gltf.scene.scale.x = 1
