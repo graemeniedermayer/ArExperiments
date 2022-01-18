@@ -26,6 +26,15 @@ Shows an N-body simulation in ar.
 ## Magnetometer
 Shows the magnetometers recordings in augmented reality 
 
+## Grain Elevator
+An photogrammetry experiment. Using photos to create a mesh then placing it back into AR.
+
+## ArRuler
+Find the absolute distance between two points in free space. Can be used as a ruler through walls. error is somewhere between 1-10% (so not great).
+
+## ArRecorder
+Saves a txt file on phone of the cameras position + quaternion. This could be used to transform a real camera into a 3d camera. Also shows an animation example for recording.
+
 # Goal Experiments
  
 ## TODO
