@@ -65,7 +65,7 @@ function init() {
 	geometry.setAttribute( 'customColor', new THREE.BufferAttribute( colors, 3 ) );
 	geometry.setAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
 	var baseColor = new THREE.Color(0xffffff );
-	var texture = new THREE.TextureLoader().load( '/static/eave/data/circle5.png' );
+	var texture = new THREE.TextureLoader().load( 'data/circle5.png' );
 	// Sprites
 	var uniforms = {
 		color:     { value: baseColor },
