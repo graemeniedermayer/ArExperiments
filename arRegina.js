@@ -1,6 +1,46 @@
 var camera, scene, renderer;
-var light;
-var room = {}; // so that 'room.visible' does cause a crash
+var attractor, light;
+var controls;
+var room = {}; // so that 'room.visible' can be set even if room isn't loaded yet
+
+init();
+animate();
+
+var button = document.createElement( 'button' );
+button.id = 'ArButton'
+button.textContent = 'ENTER AR' ;
+button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:1rem;`;
+
+document.body.appendChild(button)
+document.getElementById('ArButton').addEventListener('click',x=>AR())
+
+function getXRSessionInit( mode, options) {
+	if ( options && options.referenceSpaceType ) {
+		renderer.xr.setReferenceSpaceType( options.referenceSpaceType );
+	}
+	var space = (options || {}).referenceSpaceType || 'local-floor';
+	var sessionInit = (options && options.sessionInit) || {};
+
+	// Nothing to do for default features.
+	if ( space == 'viewer' )
+		return sessionInit;
+	if ( space == 'local' && mode.startsWith('immersive' ) )
+		return sessionInit;
+
+	// If the user already specified the space as an optional or required feature, don't do anything.
+	if ( sessionInit.optionalFeatures && sessionInit.optionalFeatures.includes(space) )
+		return sessionInit;
+	if ( sessionInit.requiredFeatures && sessionInit.requiredFeatures.includes(space) )
+		return sessionInit;
+
+	var newInit = Object.assign( {}, sessionInit );
+	newInit.requiredFeatures = [ space ];
+	if ( sessionInit.requiredFeatures ) {
+		newInit.requiredFeatures = newInit.requiredFeatures.concat( sessionInit.requiredFeatures );
+	}
+	return newInit;
+}
+
 
 function init() {
 	scene = new THREE.Scene();
@@ -16,15 +56,17 @@ function init() {
     directionalLight2.position.set( -0.9, -1, -0.2 ).normalize();
     scene.add( directionalLight2 );
 	var loader = new THREE.GLTFLoader()
-	loader.load( '/static/ar/regina.gltf', function ( gltf ) {
+	loader.load( 'regina.gltf', function ( gltf ) {
 		gltf.scene.scale.z = 0.001
 		gltf.scene.scale.y = 0.001
 		gltf.scene.scale.x = 0.001
 		scene.add( gltf.scene );
 		let oldRoom = room;
 		room = gltf.scene;
+		// propagate old visibility, if any
 		if ('visible' in oldRoom) room.visible = oldRoom.visible;
 		room.position.y = -0.3;
+		//room.rotation.y = Math.PI / 2;
 	} );
 
 	renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -35,11 +77,7 @@ function init() {
 	document.body.appendChild( renderer.domElement );
 	window.addEventListener( 'resize', onWindowResize, false );
 }
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	renderer.setSize( window.innerWidth, window.innerHeight );
-}
+
 function AR(){
 	var currentSession = null;
 	function onSessionStarted( session ) {
@@ -82,31 +120,10 @@ function AR(){
 		});
 }
 
-function getXRSessionInit( mode, options) {
-	if ( options && options.referenceSpaceType ) {
-		renderer.xr.setReferenceSpaceType( options.referenceSpaceType );
-	}
-	var space = (options || {}).referenceSpaceType || 'local-floor';
-	var sessionInit = (options && options.sessionInit) || {};
-
-	// Nothing to do for default features.
-	if ( space == 'viewer' )
-		return sessionInit;
-	if ( space == 'local' && mode.startsWith('immersive' ) )
-		return sessionInit;
-
-	// If the user already specified the space as an optional or required feature, don't do anything.
-	if ( sessionInit.optionalFeatures && sessionInit.optionalFeatures.includes(space) )
-		return sessionInit;
-	if ( sessionInit.requiredFeatures && sessionInit.requiredFeatures.includes(space) )
-		return sessionInit;
-
-	var newInit = Object.assign( {}, sessionInit );
-	newInit.requiredFeatures = [ space ];
-	if ( sessionInit.requiredFeatures ) {
-		newInit.requiredFeatures = newInit.requiredFeatures.concat( sessionInit.requiredFeatures );
-	}
-	return newInit;
+function onWindowResize() {
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
 function animate() {
@@ -117,13 +134,3 @@ function render() {
 	renderer.render( scene, camera );
 }
 
-init();
-animate();
-
-var button = document.createElement( 'button' );
-button.id = 'ArButton'
-button.textContent = 'ENTER AR' ;
-button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:1rem;`;
-
-document.body.appendChild(button)
-document.getElementById('ArButton').addEventListener('click',x=>AR())
