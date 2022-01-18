@@ -56,7 +56,7 @@ function init() {
     directionalLight2.position.set( -0.9, -1, -0.2 ).normalize();
     scene.add( directionalLight2 );
 	var loader = new THREE.GLTFLoader()
-	loader.load( 'regina.gltf', function ( gltf ) {
+	loader.load( 'data/regina.gltf', function ( gltf ) {
 		gltf.scene.scale.z = 0.001
 		gltf.scene.scale.y = 0.001
 		gltf.scene.scale.x = 0.001
