@@ -3,27 +3,48 @@ var light;
 var measures = []
 var room = {}; // so that 'room.visible' does cause a crash
 let magSensor = new Magnetometer({frequency: 10}); //60 hertz might be too much..
+let magneticBackground = new THREE.Vector3(0,0,0)
 
+setupMagSensor = ()=>{
+	magSensor.addEventListener('reading', e => {
+	  if(measures.length>800){//reset after 600 measurements
+			measures = []
+			for( var i = scene.children.length - 1; i >= 0; i--) { 
+			     obj = scene.children[i];
+			     scene.remove(obj); 
+			}
+			magneticBackground = new THREE.Vector3(0,0,0)
+		}
+      let localMeasure= new THREE.Vector3(
+          magSensor.x,
+          magSensor.y,
+          magSensor.z
+      )
+      var targetQuaternion = camera.quaternion.clone()
+	  let magField = localMeasure.applyQuaternion(targetQuaternion)
+	  if(measures.length==77){//calibrate for background magnetic field
+	  	let average = [0,0,0]
+	  	for(let i=25; i<=75; i++){
+			  average[0]+=measures[i].x
+			  average[1]+=measures[i].y
+			  average[2]+=measures[i].z
+		}
+		magneticBackground = new THREE.Vector3(average[0]/50,average[1]/50,average[2]/50)
+	  }
+	  magField.sub(magneticBackground)
+      let magLength = Math.sqrt(magField.x**2+magField.y**2+magField.z**2)/1000//this might be very long
+      let arr = new THREE.ArrowHelper( magField.clone().normalize(), camera.position.clone(), magLength, 0xffff00 );
+	  scene.add(arr)
+      measures.push(magField)
+    });
+    magSensor.start();
+}
 
 function init() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.001, 10 );
 	camera.position.x = -1
-    magSensor.addEventListener('reading', e => {
-        // save point
-      let localMeasure= new THREE.Vector3([
-          magSensor.x,
-          magSensor.y,
-          magSensor.z
-      ])
-      var targetQuaternion = camera.quaternion.clone()
-    //   d
-	  let magField = localMeasure.applyQuaternion(targetQuaternion)// TODO I'm lazy this might be wrong. check that this isn't the inverse quaternion that must be applied.
-      let magLength = magField.length//this might be very long
-      arrx = new THREE.ArrowHelper( magField.clone().normalize(), camera.position, magLength, 0xffff00 );
-      measures.push(magField)
-    });
-    magSensor.start();
+    
 	renderer = new THREE.WebGLRenderer( { antialias: true } );
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -43,6 +64,7 @@ function AR(){
 		session.addEventListener( 'end', onSessionEnded );
 		renderer.xr.setSession( session );
 		button.style.display = 'none';
+		setupMagSensor()
 		button.textContent = 'EXIT AR';
 		currentSession = session;
 	}
