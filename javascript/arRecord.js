@@ -32,7 +32,7 @@ function init() {
 	camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.001, 10 );
 	
 	var loader = new THREE.GLTFLoader()
-	loader.load( '/static/eave/experiment/scene.gltf', function ( gltf ) {
+	loader.load( 'data/scene.gltf', function ( gltf ) {
 		gltf.scene.scale.z = .25
 		gltf.scene.scale.y = .25
 		gltf.scene.scale.x = .25
