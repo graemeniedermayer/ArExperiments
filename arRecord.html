@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>AR</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<style type="text/css">
+			body .dg li.title,
+			body .dg li:not(.folder),
+			body .dg.main .close-button {
+				background-color: rgba(0, 0, 0, 0.5);
+			}
+
+			body {
+				background-color: black;
+			}
+		</style>
+	</head>
+	<body>
+
+		<input type="checkbox" id="record" name="record" value="false">
+		<label for="record"> Recording Camera</label><br>
+		<input type="checkbox" id="animate" name="animate" value="false">
+		<label for="animate">Animate Scene</label><br>
+		<input type="button" id="ArButton" name="ArButton" value="ENTER AR" style='position: absolute;top:80%;left:20%;width:20%;height:3rem;'>
+		<input type="button" id="DownloadCamera" name="DOwnloadCamera" value="download Cam" style='position: absolute;top:80%;right:20%;width:20%;height:3rem;'>
+		
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+		<script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>
+		<script src="/static/eave/experiment/ArRecord.js"></script>
+	</body>
+</html>
