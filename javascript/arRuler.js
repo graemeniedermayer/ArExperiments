@@ -97,7 +97,6 @@ animate();
 document.getElementById('ArButton').addEventListener('click',x=>AR())
 
 document.getElementById('Button1').addEventListener('click',x=>{
-	// is this deep enough of a clone?
 	pos1State = [...pos2State]
 	pos1.innerHTML = `Position= ${pos1State[0].map(x=>x.toPrecision(3))}; Quat= ${pos1State[1].map(x=>x.toPrecision(2))}`
 })
