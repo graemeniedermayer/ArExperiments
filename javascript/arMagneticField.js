@@ -7,7 +7,7 @@ let magneticBackground = new THREE.Vector3(0,0,0)
 
 setupMagSensor = ()=>{
 	magSensor.addEventListener('reading', e => {
-	  if(measures.length>800){//reset after 600 measurements
+	  if(measures.length>800){//reset after 800 measurements
 			measures = []
 			for( var i = scene.children.length - 1; i >= 0; i--) { 
 			     obj = scene.children[i];
