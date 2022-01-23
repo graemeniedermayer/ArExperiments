@@ -4,7 +4,7 @@ A set of experiments using augmented reality. These are web examples and need to
 ## Demos
 
 ### Github pages
-link here
+[Mobile Skeleton Demo](https://graemeniedermayer.github.io/ArExperiments/) (This requires chrome flags enabled).
 
 ## Caveats
 
