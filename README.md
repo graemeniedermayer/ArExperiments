@@ -1,6 +1,11 @@
 # Augmented Reality Experiments
 A set of experiments using augmented reality. These are web examples and need to be run off of a server. WebXR + Threejs are the predominate tools used.
 
+## Demos
+
+### Github pages
+link here
+
 ## Caveats
 
 ### Chrome
