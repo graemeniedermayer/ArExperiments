@@ -40,6 +40,9 @@ Find the absolute distance between two points in free space. Can be used as a ru
 ### ArRecorder
 Saves a txt file on phone of the cameras position + quaternion. This could be used to transform a real camera into a 3d camera. Also shows an animation example for recording.
 
+### Depth
+This experiments with fragment shaders and the Depth API.  It attempts to show off occlusion (although the results aren't that great). It is a good example of how to consume the api with threejs.
+
 ## Goal Experiments
  
 ### TODO
