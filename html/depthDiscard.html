@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+	<head>
+		<title>AR</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<style type="text/css">
+			@import url(https://fonts.googleapis.com/css?family=Quicksand);
+			body .dg li.title,
+			body .dg li:not(.folder),
+			body .dg.main .close-button {
+				background-color: rgba(0, 0, 0, 0.5);
+			}
+
+			body {
+				background-color: black;
+			}
+		</style>
+	</head>
+  <body>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        precision mediump float;
+        varying float zDistance;
+
+
+        void main(void) {
+          vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+          gl_Position = projectionMatrix * mvPosition;
+          zDistance = -1.0 * mvPosition.z;
+        }
+     
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        uniform vec3 color;
+        varying float zDistance;
+        
+        uniform sampler2D uDepthTexture;
+        uniform float uRawValueToMeters;
+        uniform vec2 coordTrans;
+
+        void main(void) { 
+          vec2 coord = coordTrans * gl_FragCoord.xy + vec2(1.0,1.0);
+          float alpha = 1.0;
+          float threshold = 0.2;
+          vec2 packedDepthAndVisibility = texture2D(uDepthTexture, coord.yx).ra;
+          //float depth =  texture2D(uDepthTexture, vec2(0,0)).a * uRawValueToMeters ;
+          float depth = dot(packedDepthAndVisibility, vec2(255.0, 255.0*255.0)) * uRawValueToMeters ;
+          if( depth - zDistance < 0.2 ){
+              alpha = depth - zDistance;
+          } 
+          gl_FragColor =  vec4(depth-zDistance, depth-zDistance, depth-zDistance, alpha);
+        }
+        
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+		  
+    <script src="/static/eave/experiment/depthDiscard.js"></script>
+  </body>
+</html>
