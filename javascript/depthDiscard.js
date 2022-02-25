@@ -133,11 +133,12 @@ function onXRFrame(t, frame) {
 
             const depthData = frame.getDepthInformation(view);
             if (depthData) {
-				shaderMaterial.uniforms.uRawValueToMeters.value = depthData.rawValueToMeters
-				shaderMaterial.uniforms.coordTrans.value.x =  -1/viewport.width
-				shaderMaterial.uniforms.coordTrans.value.y = -1/viewport.height
-				shaderMaterial.uniforms.uDepthTexture.value = new THREE.DataTexture(new Uint8Array(depthData.data), depthData.width, depthData.height, THREE.LuminanceAlphaFormat)
-				shaderMaterial.needsUpdate = true
+		shaderMaterial.uniforms.uRawValueToMeters.value = depthData.rawValueToMeters
+		shaderMaterial.uniforms.coordTrans.value.x =  -1/viewport.width
+		shaderMaterial.uniforms.coordTrans.value.y = -1/viewport.height
+		shaderMaterial.uniforms.uDepthTexture.value = new THREE.DataTexture(new Uint8Array(depthData.data), depthData.width, depthData.height, THREE.LuminanceAlphaFormat)
+		shaderMaterial.uniforms.uDepthTexture.value.magFilter = THREE.LinearFilter		
+		shaderMaterial.needsUpdate = true
             } else {
               console.log('unavailable')
 			}
