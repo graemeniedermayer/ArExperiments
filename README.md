@@ -43,6 +43,12 @@ Saves a txt file on phone of the cameras position + quaternion. This could be us
 ### Depth
 This experiments with fragment shaders and the Depth API.  It attempts to show off occlusion (although the results aren't that great). It is a good example of how to consume the api with threejs.
 
+### Depth Mesh Capture
+Grabbing a quick mesh of the location
+
+### Depth Contour Maps
+Converts the depth information into an image
+
 ## Goal Experiments
  
 ### TODO
