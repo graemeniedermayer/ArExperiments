@@ -4,7 +4,15 @@ A set of experiments using augmented reality. These are web examples and need to
 ## Demos
 
 ### Github pages
-[Mobile Skeleton Demo](https://graemeniedermayer.github.io/ArExperiments/) (This requires chrome flags enabled).
+[All Demo](https://graemeniedermayer.github.io/ArExperiments/) 
+
+#### Select Demos
+[Skeleton](https://graemeniedermayer.github.io/ArExperiments/html/ArSkeleton.html) 
+[Photogrammetry](https://graemeniedermayer.github.io/ArExperiments/html/Photogrammetry.html) 
+[MagneticField](https://graemeniedermayer.github.io/ArExperiments/html/MagneticField.html) (requires chrome flag)
+[Recording Values](https://graemeniedermayer.github.io/ArExperiments/html/arRecord.html) 
+[AR Occlusion](https://graemeniedermayer.github.io/ArExperiments/html/depthOcclusion.html) 
+[Mesh Capture with Depth api](https://graemeniedermayer.github.io/ArExperiments/html/depthMesh.html) 
 
 ## Caveats
 
