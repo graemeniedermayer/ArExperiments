@@ -14,39 +14,21 @@
 			body {
 				background-color: black;
 			}
+			#pos1 {position:relative;font-size: 1.5rem;color:palegreen;}
+			#pos2 {position:relative;font-size: 1.5rem;color:palegreen;}
+			#dif {position:relative;font-size: 1.5rem;color:palegreen;}
 		</style>
 	</head>
-	<script type="x-shader/x-vertex" id="vertexshader">
-		attribute float size;
-		attribute vec3 customColor;
-		varying vec3 vColor;
-		varying float zdist;
-		void main() {
-			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-			zdist =  1.1;
-			vColor = customColor * vec3( zdist , zdist , zdist );
-			gl_PointSize = size * ( 400.0 / -mvPosition.z );
-			gl_Position = projectionMatrix * mvPosition;
-		}
-	</script>
-	<script type="x-shader/x-fragment" id="fragmentshader">
-		uniform vec3 color;
-		uniform sampler2D texture;
-		varying vec3 vColor;
-		void main() {
-			gl_FragColor = vec4( color * vColor, 1.0 );
-		}
-	</script>
 	<body>
 
-		<div id=pos1 style='position:relative;font-size: 2rem;color:palegreen'></div>
-		<div id=pos2 style='position:relative;font-size: 2rem;color:palegreen'></div>
-		<div id=dif style='position:relative;font-size: 2rem;color:palegreen'></div>
+		<div id=pos1></div>
+		<div id=pos2></div>
+		<div id=dif></div>
 		<input type="button" id="ArButton" name="ArButton" value="ENTER AR" style='position: absolute;top:80%;left:40%;width:20%;height:3rem;'>
 		<input type="button" id="Button1" value="Set origin" style='position: absolute;top:20%;left:20%;width:10%;height:3rem;'>
 		<input type="button" id="Button2" value="Save diff" style='position: absolute;top:20%;right:20%;width:10%;height:3rem;'>
 		
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-		<script src="javascript/arRuler.js"></script>
+		<script src="../javascript/arRuler.js"></script>
 	</body>
 </html>
