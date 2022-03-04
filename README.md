@@ -50,7 +50,7 @@ Grabbing a quick mesh of the location
 Converts the depth information into an image
 
 ### Camera Access
-This works by dropping out of AR 
+This works by dropping out of AR temporarily and taking a screen capture from a video and then restarting the AR session. Super hacky.
 
 ## Goal Experiments
  
