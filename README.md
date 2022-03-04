@@ -49,6 +49,9 @@ Grabbing a quick mesh of the location
 ### Depth Contour Maps
 Converts the depth information into an image
 
+### Camera Access
+This works by dropping out of AR 
+
 ## Goal Experiments
  
 ### TODO
