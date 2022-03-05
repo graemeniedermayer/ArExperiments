@@ -47,15 +47,15 @@ function init() {
 	light = new THREE.PointLight( 0xffffff, 1 );
 	light.distance = 2;
 	var material = new THREE.MeshBasicMaterial( { color: "rgb(100, 100, 250)"} );
-	var particles = snap[18].length-1;
+	var particles = snap[0].length-1;
 	var geometry = new THREE.BufferGeometry();
 	var positions = new Float32Array( particles * 3 );
 	var colors = new Float32Array( particles * 3 );
 	var sizes = new Float32Array( particles );
 	for ( var i = 0, i3 = 0; i < particles; i ++, i3 += 3 ) {
-		positions[ i3 + 0 ] = snap[18][ i ][ 0 ]/10000 - 5;
-		positions[ i3 + 1 ] = snap[18][ i ][ 1 ]/10000 - 5;
-		positions[ i3 + 2 ] = snap[18][ i ][ 2 ]/10000 - 5;
+		positions[ i3 + 0 ] = snap[0][ i ][ 0 ]/10000 - 5;
+		positions[ i3 + 1 ] = snap[0][ i ][ 1 ]/10000 - 5;
+		positions[ i3 + 2 ] = snap[0][ i ][ 2 ]/10000 - 5;
 		colors[ i3 + 0 ] = 0.6;
 		colors[ i3 + 1 ] = 0.9;
 		colors[ i3 + 2 ] = 0.9;
