@@ -65,6 +65,9 @@ Converts the depth information into an image
 ### Camera Access
 This works by dropping out of AR temporarily and taking a screen capture from a video and then restarting the AR session. Super hacky.
 
+### Hydrogen Atom
+This uses a worker for the heavy computation and hows hydrogen atom. 
+
 ## Goal Experiments
  
 ### TODO
