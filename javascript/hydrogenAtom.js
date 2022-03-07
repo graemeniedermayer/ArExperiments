@@ -1,4 +1,4 @@
-var texture = new THREE.TextureLoader().load( 'circle5.png' );
+var texture = new THREE.TextureLoader().load( '../data/circle5.png' );
 function hslToRgb(h, s, l){
     var r, g, b;
     if(s == 0){
