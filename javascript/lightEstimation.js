@@ -39,7 +39,7 @@ function init(){
   let cube = new THREE.Mesh( geometry, new THREE.MeshStandardMaterial( { color:'rgba(100,200,100,1)'} ) );
   
 	var loader = new THREE.GLTFLoader()
-	loader.load( '/static/eave/experiment/grainElevator.gltf', function ( gltf ) {
+	loader.load( '../data/grainElevator.gltf', function ( gltf ) {
 		gltf.scene.scale.z = 1
 		gltf.scene.scale.y = 1
 		gltf.scene.scale.x = 1
