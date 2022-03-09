@@ -179,7 +179,7 @@ function onXRFrame(t, frame) {
 
 				// normalized values 
 				let cap = 5
-				let capFunc = (r,l)=> 1/cap*Math.min(cap,(r+l**255)*depthData.rawValueToMeters)
+				let capFunc = (r,l)=> 1/cap*Math.min(cap,(r+l*255)*depthData.rawValueToMeters)
 				for (var i=0, j=0, l = data.length;j < data.length;j+=2, i+=4) {
 					// contours
 				    // imgData.data[i]   = data[j+1];   //red
