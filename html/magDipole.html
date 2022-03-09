@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+	<head>
+		<title>AR</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<style type="text/css">
+			@import url(https://fonts.googleapis.com/css?family=Quicksand);
+			body .dg li.title,
+			body .dg li:not(.folder),
+			body .dg.main .close-button {
+				background-color: rgba(0, 0, 0, 0.5);
+			}
+
+			body {
+				background-color: black;
+			}
+		</style>
+	</head>
+  <body>
+	<script type="x-shader/x-vertex" id="vertexshader">
+		attribute float size;
+		attribute vec3 customColor;
+		varying vec3 vColor;
+		varying float zdist;
+		void main() {
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			zdist =  1.1;
+			vColor = customColor * vec3( zdist , zdist , zdist );
+			gl_PointSize = size * ( 400.0 / -mvPosition.z );
+			gl_Position = projectionMatrix * mvPosition;
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragmentshader">
+		uniform vec3 color;
+		uniform sampler2D texture;
+		varying vec3 vColor;
+		void main() {
+			gl_FragColor = vec4( color * vColor, 1.0 );
+			gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+		}
+	</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+		  
+    <script src="../javascript/magDipole.js"></script>
+  </body>
+</html>
