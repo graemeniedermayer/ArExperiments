@@ -71,3 +71,4 @@ This uses a worker for the heavy computation and hows hydrogen atom.
 ## Goal Experiments
  
 ### TODO
+magnetism + mass + qm + relativity
