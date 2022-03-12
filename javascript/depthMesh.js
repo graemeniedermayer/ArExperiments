@@ -145,6 +145,7 @@ function onXRFrame(t, frame) {
 				mesh.quaternion.copy(camera.quaternion)
 				mesh.position.copy(camera.position)
 				mesh.rotateZ(3*Math.PI/2)
+				mesh.material.wireframe = true
 				scene.add( mesh );
             } else {
               console.log('unavailable')
