@@ -68,7 +68,15 @@ This works by dropping out of AR temporarily and taking a screen capture from a 
 ### Hydrogen Atom
 This uses a worker for the heavy computation and hows hydrogen atom. 
 
+### Ammo Physics (bullet engine)
+Uses the bullet engine in combination with the depth api
+
+### Magnetic Dipole Finder
+Uses dipoles to estimate large metal objects
+
 ## Goal Experiments
  
 ### TODO
+clean code.
+
 magnetism + mass + qm + relativity
