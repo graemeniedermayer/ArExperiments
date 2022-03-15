@@ -5,7 +5,7 @@ meshes = new THREE.Group()
 
 if(window.Worker){
 	let lockWorker = false
-	physicsWorker = new Worker('/static/eave/experiment/depthPhysicsAmmoWorker.js');
+	physicsWorker = new Worker('depthPhysicsAmmoWorker.js');
 	physicsWorker.onmessage = function(e) {
 		if(e.data.type=='update'){
 			let {objects}=e.data
@@ -143,45 +143,45 @@ function onXRFrame(t, frame) {
 			//update every few seconds?
             if (depthData && captureNext) {
                 captureNext = false
-				scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov/(2*360) )
-				whratio = viewport.width/viewport.height
+		scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov/(2*360) )
+		whratio = viewport.width/viewport.height
                 const geometry = new THREE.PlaneGeometry(scaleGeo,  scaleGeo*whratio, depthData.width-1, depthData.height-1);
-				const vertices = geometry.attributes.position.array;
-				let data = new Uint8Array(depthData.data)
-				let convRate = depthData.rawValueToMeters
-				let depthMap = new  Float32Array(data.length/2)
-				boundingBox = {'top':-Infinity,'bottom':Infinity, 'left':Infinity, 'right':-Infinity}
-				// this is a mess.
-				for ( let  j = 0, k = 0, i = 0, l = data.length; j < l; j+=2, k+=3) {
-					zdistance = convRate*(data[ i ]+data[ i+1 ]*255)
-					vertices[ k ] = vertices[ k ]*zdistance;
-					vertices[ k + 1 ] = vertices[ k + 1 ]*zdistance ;
-					vertices[ k + 2 ] =  - zdistance ;
-					i+= 2
-				}
-				mesh = new THREE.Mesh( geometry, new THREE.MeshStandardMaterial( { color:'rgba(100,200,100,0.2)'} ) );
+		const vertices = geometry.attributes.position.array;
+		let data = new Uint8Array(depthData.data)
+		let convRate = depthData.rawValueToMeters
+		let depthMap = new  Float32Array(data.length/2)
+		boundingBox = {'top':-Infinity,'bottom':Infinity, 'left':Infinity, 'right':-Infinity}
+		// this is a mess.
+		for ( let  j = 0, k = 0, i = 0, l = data.length; j < l; j+=2, k+=3) {
+			zdistance = convRate*(data[ i ]+data[ i+1 ]*255)
+			vertices[ k ] = vertices[ k ]*zdistance;
+			vertices[ k + 1 ] = vertices[ k + 1 ]*zdistance ;
+			vertices[ k + 2 ] =  - zdistance ;
+			i+= 2
+		}
+		mesh = new THREE.Mesh( geometry, new THREE.MeshStandardMaterial( { color:'rgba(100,200,100,0.2)'} ) );
 				
-				mesh.quaternion.copy(camera.quaternion)
-				mesh.position.copy(camera.position)
-				mesh.rotateZ(3*Math.PI/2)
-				mesh.material.wireframe = true
-				scene.add( mesh );
-				physicsWorker.postMessage({
-					'type':'initMap',
-					'map':{
-						'positions':vertices,
-						'index': geometry.index.array,
-						'matrixWorld': mesh.matrixWorld,
-						'threeVec': new THREE.Vector3(),//I don't want to import all of threejs into the worker
-						'height':depthData.height,
-						'width':depthData.width,
-						'pos':mesh.position.toArray(),
-						'rot':mesh.quaternion.toArray()
-					}
-				})
+		mesh.quaternion.copy(camera.quaternion)
+		mesh.position.copy(camera.position)
+		mesh.rotateZ(3*Math.PI/2)
+		mesh.material.wireframe = true
+		scene.add( mesh );//This line can be removed to disable the rendering of the mesh.
+		physicsWorker.postMessage({
+			'type':'initMap',
+			'map':{
+				'positions':vertices,
+				'index': geometry.index.array,
+				'matrixWorld': mesh.matrixWorld,
+				'threeVec': new THREE.Vector3(),//I don't want to import all of threejs into the worker
+				'height':depthData.height,
+				'width':depthData.width,
+				'pos':mesh.position.toArray(),
+				'rot':mesh.quaternion.toArray()
+			}
+		})
             } else {
               console.log('unavailable')
-			}
+		}
         }
 	}
 }
@@ -237,6 +237,7 @@ function raycasterFunction( event) {
 		})
 	}else{
 		size = 0.1
+		isSphere = !isSphere
 		let boxGeometry = new THREE.BoxGeometry( size, size, size, 1, 1, 1 );
 		let boxMaterial = new THREE.MeshBasicMaterial( { color: new THREE.Color(`hsl(${255*Math.random()}, 100%, 77%)`) }  );
 		boxSphere = new THREE.Mesh( boxGeometry, boxMaterial );
