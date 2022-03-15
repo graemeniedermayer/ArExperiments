@@ -54,14 +54,18 @@ function init(){
 
   lightProbe = new THREE.LightProbe();
   lightProbe.intensity = 0;
+  lightProbe.castShadow = true;
   scene.add(lightProbe);
   directionalLight = new THREE.DirectionalLight();
   directionalLight.intensity = 0;
+  lightProbe.castShadow = true;
   scene.add(directionalLight);
   renderer = new THREE.WebGLRenderer( { antialias: true } );
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.xr.enabled = true;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap
   // renderer.gammaOutput = true;
   document.body.appendChild( renderer.domElement );
   window.addEventListener( 'resize', onWindowResize, false );
