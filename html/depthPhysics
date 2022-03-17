@@ -43,6 +43,6 @@
 	<div id="captureMesh" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;bottom:0px;width:10rem;height:3rem;">Capture</div>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 		  
-    <script src="/static/eave/experiment/depthPhysics.js"></script>
+    <script src="../javascript/depthPhysics.js"></script>
   </body>
 </html>
