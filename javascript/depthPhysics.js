@@ -179,6 +179,28 @@ function onXRFrame(t, frame) {
 				'rot':mesh.quaternion.toArray()
 			}
 		})
+// 		    to simplify the mesh before using it.
+		    // const modifier = new THREE.SimplifyModifier();
+				// const simplified = mesh.clone();
+				// simplified.material = simplified.material.clone();
+				// simplified.material.wireframe = true
+				// const count = Math.floor( simplified.geometry.attributes.position.count * Number(document.getElementById('value').value) ); // number of vertices to remove
+				// simplified.geometry = modifier.modify( simplified.geometry, count );
+				// scene.add( simplified );
+				// // scene.add( mesh );
+				// physicsWorker.postMessage({
+				// 	'type':'initMap',
+				// 	'map':{
+				// 		'positions':simplified.geometry.attributes.position.array,
+				// 		'index': simplified.geometry.index.array,
+				// 		'matrixWorld': simplified.matrixWorld,
+				// 		'threeVec': new THREE.Vector3(),//I don't want to import all of threejs into the worker
+				// 		'height':depthData.height,
+				// 		'width':depthData.width,
+				// 		'pos':simplified.position.toArray(),
+				// 		'rot':simplified.quaternion.toArray()
+				// 	}
+				// })
             } else {
               console.log('unavailable')
 		}
