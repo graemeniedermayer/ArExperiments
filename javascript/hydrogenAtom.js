@@ -228,7 +228,7 @@ let onInput = ()=>{
 }
 if(window.Worker){
 	let lockWorker = false
-	strategyWorker = new Worker('/hydrogenWorker.js');
+	strategyWorker = new Worker('./hydrogenWorker.js');
     strategyWorker.postMessage({
 			'type':'grid',
 			'grid': grid,
