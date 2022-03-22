@@ -5,7 +5,7 @@ meshes = new THREE.Group()
 
 if(window.Worker){
 	let lockWorker = false
-	physicsWorker = new Worker('./depthPhysicsAmmoWorker.js');
+	physicsWorker = new Worker('../javascript/depthPhysicsAmmoWorker.js');
 	physicsWorker.onmessage = function(e) {
 		if(e.data.type=='update'){
 			let {objects}=e.data
