@@ -5,6 +5,7 @@ let magneticScale = 0.0000001 //needs to be a small number
 let magneticMoment = new THREE.Vector3(0.0000001,0.0000001,0.0000001) //needs to be a small number
 let magneticPosition = new THREE.Vector3(0,0,0)
 let dipoleObj;
+let error = new THREE.Vector3(0,0,0);
 let captureBackgroundFlag = false;
 let useGradDescent = false;
 let xrRefSpace = null;
@@ -17,6 +18,7 @@ let newPredictions = false
 let predictedAv = new THREE.Vector3()
 let recorded = []
 let measures = []
+
 
 setupMagSensor = ()=>{
 	magSensor.addEventListener('reading', e => {
@@ -37,7 +39,9 @@ setupMagSensor = ()=>{
       let color = 0xffff00
 	  if(captureBackgroundFlag){
 	  	backgroundCount+=1
-        magneticBackground.multiplyScalar(backgroundCount/(backgroundCount+1)).add(magField.clone().multiplyScalar(1/(1+backgroundCount)))
+        magneticBackground.multiplyScalar(
+            backgroundCount/(backgroundCount+1)
+        ).add(magField.clone().multiplyScalar(1/(1+backgroundCount)))
         magneticMoment = magneticBackground.clone().multiplyScalar(0.005)      
         color = 0x00ffff
 	  }else{
@@ -74,7 +78,9 @@ parameterizeMagField = (originOfExpectedMagnet, expectedMoment)=>{
 
 magneticField = (radius, moment)=>{
     let radLength = radius.length()
-    return (radius.clone().multiplyScalar(moment.dot(radius)*3/radLength**5)).sub(moment.clone().multiplyScalar(1/radLength**3))
+    return (
+        radius.clone().multiplyScalar(moment.dot(radius)*3/radLength**5)
+        ).sub(moment.clone().multiplyScalar(1/radLength**3))
 }
 difH = 0.000001
 learningRate = 0.01
@@ -83,111 +89,26 @@ yaxis = new THREE.Vector3(0,1,0)
 zaxis = new THREE.Vector3(0,0,1)
 // Newton's method might be better (doesn't work)
 // but grad descent is super interpretable.
-// roundToOne = (x)=> Math.abs(x)>0 && Math.abs(x)<1 ? Math.ceil(x): Math.floor(x)
-let gradDescent = (guess, results)=>{
-    let [origin, moment] = guess
-    // differentiate with respect to origin + magnetic moment (6 parameters?)
-    let difMagFunc = (pos, magnet) => {
-        mag = parameterizeMagField(origin, moment)(pos, magnet).length() //two sided dif would be more accurate
-        return    [
-            (parameterizeMagField(origin.clone().addScaledVector(xaxis,difH), moment)(pos, magnet).length() - mag)/difH,
-            (parameterizeMagField(origin.clone().addScaledVector(yaxis,difH), moment)(pos, magnet).length() - mag)/difH,
-            (parameterizeMagField(origin.clone().addScaledVector(zaxis,difH), moment)(pos, magnet).length() - mag)/difH,
-            // (parameterizeMagField(origin, moment.clone().addScaledVector(xaxis,difH))(pos).length() - mag)/difH,
-            // (parameterizeMagField(origin, moment.clone().addScaledVector(yaxis,difH))(pos).length() - mag)/difH,
-            // (parameterizeMagField(origin, moment.clone().addScaledVector(zaxis,difH))(pos).length() - mag)/difH
-        ]
-    }
-    error = [0,0,0]
-    console.log('ok')
-    for(let result of results){
-        [pos, mag] = result
-        let dif = difMagFunc(pos, mag)
-        for(let j in error){
-            error[j]+= dif[j]
-        }
-    }
-    // Math sign
-    error =  (new THREE.Vector3(Math.sign(error[0]),Math.sign(error[1]),Math.sign(error[2]) )).multiplyScalar(learningRate)
-    newOrigin = origin.sub( error )
-    // newMoment = moment.sub( (new THREE.Vector3(1/error[3],1/error[4],1/error[5])).multiplyScalar(learningRate) )
-    newMoment = moment.clone()
-    // newMomentScale = momentScale-error[3]*learningRate*0.000000001
-    return [newOrigin, newMoment, error]
-}
-let memory = {}
-let minMemory = ['memoryName',Infinity]//double?
-let createRandomState = () => {
-    let value = 101
-    let mvalue = 10001
-    let ratio = 0.01
-    let mratio = 0.001
-    let offset = (value-1)*ratio/2
-    let moffset = (value-1)*mratio/2
-    let x = Math.floor( value*Math.random() )*ratio - offset + predictedAv.x
-    let y = Math.floor( value*Math.random() )*ratio - offset + predictedAv.y
-    let z = Math.floor( value*Math.random() )*ratio - offset + predictedAv.z
-    let mx = Math.floor( mvalue*Math.random() )*mratio - moffset
-    let my = Math.floor( mvalue*Math.random() )*mratio - moffset
-    let mz = Math.floor( mvalue*Math.random() )*mratio - moffset
-    if(memory[`${[x,y,z,mx,my,mz]}`]){
-        [x,y,z,mx,my,mz]=createRandomState()
-    }
-    // return a value not in the q table
-    return [x,y,z,mx,my,mz]
-}
-rewardFactory = (origin, moment)=>{
-    return builtRewardFunc = (pos, magnet) => {
-        return (parameterizeMagField(origin, moment)(
-            pos, magnet).sub(magnet)).length()
-    }
-}
-let randomLearning = (guess, results)=>{
-    let [origin, moment] = guess
-    error = 0
-    rewardFunc = rewardFactory(origin, moment)
-    for(let result of results){
-        [pos, mag] = result
-        error += rewardFunc(pos, mag)**2
-    }
-    error = ((origin.clone().sub(predictedAv)).length()*10)**2
-    let totError = Math.sqrt(error)  
-    memory[`${origin.toArray()},${moment.toArray()}`] = totError
-    if(totError < minMemory[1]){
-        minMemory[1] = totError
-        minMemory[0] = [origin, moment]
-        console.log(origin)
-        initLines(origin, moment)
-    }
-    let [x,y,z,mx,my,mz] = createRandomState()
-    let newOrigin = new THREE.Vector3(x,y,z)
-    let newMoment = new THREE.Vector3(mx,my,mz)
-    return [newOrigin, newMoment, error]
-}
 
+let sphereToCartesian = ( r, theta, phi) => {
+    let x= r * Math.sin(phi)* Math.cos(theta)
+    let y= r * Math.sin(phi)* Math.sin(theta)
+    let z= r * Math.cos(phi)
+    return [x, y, z]
+}
 let initLines = (magneticPosition, magneticMoment)=>{
     sizeOfLines = 4000
     scaling = 1
     sizeOfSphere = 0.05
     let lineQuat = (new THREE.Quaternion()).setFromUnitVectors(new THREE.Vector3(0,0,1), magneticMoment.clone().normalize())
 
-    let cartesianToSpherical = (x,y,z) => {
-        let r = Math.sqrt(x**2+y**2+z**2)
-        let theta = Math.atan2(y,x)
-        let phi = Math.acos(z/ r)
-        return [r, theta, phi]
-    }
-    let sphereToCartesian = ( r, theta, phi) => {
-    	let x= r * Math.sin(phi)* Math.cos(theta)
-    	let y= r * Math.sin(phi)* Math.sin(theta)
-    	let z= r * Math.cos(phi)
-        return [x, y, z]
-    }
-
     startingLocations = []
     for(let phi=0; phi< Math.PI/4; phi+= Math.PI/(4*5)){
         for(let theta =0; theta<Math.PI*2; theta+=Math.PI/4){
-            startingLocations.push( (new THREE.Vector3(...sphereToCartesian( sizeOfSphere, theta, phi))).applyQuaternion(lineQuat).add(magneticPosition) )
+            startingLocations.push( 
+                (new THREE.Vector3(...sphereToCartesian( sizeOfSphere, theta, phi))
+                ).applyQuaternion(lineQuat).add(magneticPosition) 
+            )
         }
     }
 
@@ -241,6 +162,10 @@ let initLines = (magneticPosition, magneticMoment)=>{
     // dipoleObj.geometry.translate(...magneticPosition.toArray());
     scene.add(dipoleObj);
 }
+moveLines = (newPos)=>{
+    dipoleObj.position.copy(newPos)
+}
+// move object
 function getXRSessionInit( mode, options) {
   	if ( options && options.referenceSpaceType ) {
   		renderer.xr.setReferenceSpaceType( options.referenceSpaceType );
@@ -270,7 +195,6 @@ function getXRSessionInit( mode, options) {
 function init(){
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.001, 10 );
-  initLines(magneticPosition, magneticMoment )
   renderer = new THREE.WebGLRenderer( { antialias: true } );
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
@@ -280,6 +204,28 @@ function init(){
   window.addEventListener( 'resize', onWindowResize, false );
 }
 
+if(window.Worker){
+	let lockWorker = false
+	strategyWorker = new Worker('/static/eave/experiment/predictDipoleWorker.js');
+    gradDescent = (position, moment,results)=>{
+        // if objects are too heavy?
+        if(!lockWorker){
+            lockWorker = true
+            console.log('ok')
+            strategyWorker.postMessage({
+                'data': [position, moment, results],
+            })
+        }
+    }
+	strategyWorker.onmessage = function(e) {
+		let data = e.data.data;
+        magneticPosition.copy(data[0])
+        magneticMoment.copy(data[1])
+        error.copy(data[2])
+        moveLines(magneticPosition)
+        lockWorker = false
+	}
+}
 
 function AR(){
 	var currentSession = null;
@@ -349,28 +295,10 @@ function onXRFrame(t, frame) {
                     });
                     predictedAv.multiplyScalar(1/recorded.length)
                     magneticPosition = predictedAv.clone()
-                }
-                // if(Object.keys(memory).length < 500){
-                    // [magneticPosition, magneticMoment, error]= randomLearning([
-                    //     magneticPosition,
-                    //     magneticMoment,  
-                    // ],
-                    //     recorded
-                    // )
-
-                // }else{
-
-                    [magneticPosition, magneticMoment, error]= gradDescent([
-                        magneticPosition,
-                        magneticMoment,  
-                    ],
-                        recorded
-                    )
-                    console.log(magneticMoment)
-                    console.log(magneticPosition)
-                    console.log(error)
                     initLines(magneticPosition, magneticMoment)
-                // }
+                }
+
+                    gradDescent(magneticPosition,magneticMoment,recorded)
             }
         }
 	}
