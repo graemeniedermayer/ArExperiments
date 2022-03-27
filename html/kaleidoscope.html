@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+	<head>
+		<title>AR</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<style type="text/css">
+			@import url(https://fonts.googleapis.com/css?family=Quicksand);
+			body .dg li.title,
+			body .dg li:not(.folder),
+			body .dg.main .close-button {
+				background-color: rgba(0, 0, 0, 0.5);
+			}
+
+			body {
+				background-color: black;
+			}
+		</style>
+	</head>
+  <body>
+    <script id="vertexShader" type="x-shader/x-vertex">
+      attribute vec4 aVertexPosition;
+      varying vec2 vUv;
+      void main(void) {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        vUv = uv.yx;
+        }
+     
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+      uniform sampler2D uSampler;
+      uniform vec2 coordTrans;
+      varying vec2 vUv;
+      void main(void) {
+        vec2 coord = vec2(1.0,-1.0) * vUv + vec2(0.0,1.0);
+        vec4 col = texture2D(uSampler, coord);
+        gl_FragColor.rgb = col.rgb;
+        gl_FragColor.a = 1.0;
+      }
+        
+    </script> 
+    <div id="captureMesh" style="background:rgba(100,100,200,1);position:absolute;bottom:0px;width:10rem;height:3rem;">Capture Image</div>
+   
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+		  
+    <script src="../javascript/kaeidoscope.js"></script>
+  </body>
+</html>
