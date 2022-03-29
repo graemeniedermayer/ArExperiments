@@ -1,9 +1,9 @@
-let scene, uniforms, renderer, light, camera, gl, currentSession, shaderMaterial, scaleGeo, whratio, baseLayer, video, context, pixels; 
+let scene, uniforms, renderer, light, camera, camBinding, gl, texture1, shaderMaterial, scaleGeo, whratio, glBinding, dcamera, shaderProgram; 
       // XR globals.
       let xrButton = null;
       let xrRefSpace = null;
-
 let captureNext = false 
+
 function getXRSessionInit( mode, options) {
   	if ( options && options.referenceSpaceType ) {
   		renderer.xr.setReferenceSpaceType( options.referenceSpaceType );
@@ -41,15 +41,6 @@ function init(){
   light.position.y = 1.5
   light.position.z = -1.2
   scene.add(light)
-  let scaleGeo = Math.sin( 2*Math.PI*camera.fov/(2*360) )
-  let whratio = window.innerWidth / window.innerHeight
-  const geometry = new THREE.PlaneGeometry( scaleGeo*whratio, scaleGeo, 90, 50);
-  
-  mesh = new THREE.Mesh( geometry, new THREE.MeshStandardMaterial( ) );
-  mesh.quaternion.copy(camera.quaternion)
-  mesh.position.copy(camera.position)
-  mesh.position.add(new THREE.Vector3(0,0,-0.3).applyQuaternion(camera.quaternion))
-  scene.add( mesh );
   var ambient = new THREE.AmbientLight( 0x222222 );
   scene.add( ambient );
   renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -63,22 +54,22 @@ function init(){
 
 
 function AR(){
-	currentSession = null;
+	var currentSession = null;
 	function onSessionStarted( session ) {
 		session.addEventListener( 'end', onSessionEnded );
 		renderer.xr.setSession( session );
 		gl = renderer.getContext()
+		gl.makeXRCompatible().then(x=>{
+			// could lead to race condition
+			initCameraCaptureScene(gl)
+			glBinding = new XRWebGLBinding(session, gl);
+		})
 		button.style.display = 'none';
 		button.textContent = 'EXIT AR';
 		currentSession = session;
 		session.requestReferenceSpace('local').then((refSpace) => {
           xrRefSpace = refSpace;
           session.requestAnimationFrame(onXRFrame);
-		  let canvas = document.getElementsByTagName('canvas')[0]
-		  video = document.createElement('video')
-		  video.id = 'userCam'
-		  video.autoplay = true;
-		  document.body.append(video)
         });
 	}
 	function onSessionEnded( /*event*/ ) {
@@ -90,8 +81,12 @@ function AR(){
 	if ( currentSession === null ) {
 
         let options = {
-          requiredFeatures: ['dom-overlay'],
+          requiredFeatures: ['depth-sensing', 'dom-overlay', 'camera-access'],
           domOverlay: { root: document.body },
+		  depthSensing: {
+		    usagePreference: [ "cpu-optimized"],
+		    dataFormatPreference: ["luminance-alpha"]
+		  }
         };
 		var sessionInit = getXRSessionInit( 'immersive-ar', {
 			mode: 'immersive-ar',
@@ -114,58 +109,163 @@ function AR(){
 			document.body.style.backgroundColor = '';
 			renderer.domElement.style.display = '';
 		});
-	function onXRFrame(t, frame) {
+}
+function initCameraCaptureScene(gl) {
+    var vertices = [
+        -1.0, 1.0, 0.0
+    ];
+
+    vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    var vertCode =
+    'attribute vec3 coordinates;' +
+    'void main(void) {' +
+        'gl_Position = vec4(coordinates, 1.0);' +
+        'gl_PointSize = 1.0;'+
+    '}';
+    var vertShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertShader, vertCode);
+    gl.compileShader(vertShader);
+
+    // NOTE: we must explicitly use the camera texture in drawing,
+    // otherwise uSampler gets optimized away, and the
+    // camera texture gets destroyed before we could capture it.
+    var fragCode =
+    'uniform sampler2D uSamples;' +
+    'void main(void) {' +
+        'gl_FragColor = texture2D(uSamples, vec2(0,0));' +
+    '}';
+    var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragShader, fragCode);
+    gl.compileShader(fragShader);
+
+    shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertShader);
+    gl.attachShader(shaderProgram, fragShader);
+    gl.linkProgram(shaderProgram);
+
+    aCoordLoc = gl.getAttribLocation(shaderProgram, "coordinates");
+    uSamplerLoc = gl.getUniformLocation(shaderProgram, "uSamples");
+	uSamplerLocs = gl.getUniformLocation(shaderProgram, "uSampler");
+
+    let glError = gl.getError();
+    if (glError!= gl.NO_ERROR) {
+        console.log("GL error: " + glError);
+    }
+}
+function drawCameraCaptureScene(gl, cameraTexture, width, height) {
+    const prevShaderId = gl.getParameter(gl.CURRENT_PROGRAM);
+
+    gl.useProgram(shaderProgram);
+
+    // Bind the geometry
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.vertexAttribPointer(aCoordLoc, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(aCoordLoc);
+
+    // Bind the texture to 
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+    gl.uniform1i(uSamplerLoc, 1);
+
+    // Draw the single point
+    gl.drawArrays(gl.POINTS, 0, 1);
+	
+    const prev_framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING); // save the screen framebuffer ID
+
+    // Create a framebuffer backed by the texture
+    const framebuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, cameraTexture, 0);
+
+    // Read the contents of the framebuffer
+    const data = new Uint8Array(width * height * 4);
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    gl.deleteFramebuffer(framebuffer);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, prev_framebuffer); // bind back the screen framebuffer
+
+	texture1 = gl.createTexture();
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture(gl.TEXTURE_2D, texture1);
+	gl.uniform1i(uSamplerLocs, 0);
+	const level = 1;
+	const internalFormat = gl.RGBA;
+	const border = 0;
+	const srcFormat = gl.RGBA;
+	const srcType = gl.UNSIGNED_BYTE;
+	const pixel = data;  
+	gl.texImage2D(gl.TEXTURE_2D, level, internalFormat,
+				  width, height, border, srcFormat, srcType,
+				  pixel);
+
+	gl.useProgram(prevShaderId);
+	
+	return data
+}
+count = 0
+function onXRFrame(t, frame) {
     const session = frame.session;
     session.requestAnimationFrame(onXRFrame);
-    baseLayer = session.renderState.baseLayer;
+    const baseLayer = session.renderState.baseLayer;
     const pose = frame.getViewerPose(xrRefSpace);
 	render()
+	light.position.z = -3 - 2*Math.sin(count)
+	count += 0.02
 	if (pose) {
 		for (const view of pose.views) {
             const viewport = baseLayer.getViewport(view);
             gl.viewport(viewport.x, viewport.y,
                         viewport.width, viewport.height);
-			if( captureNext ){
-				captureNext = false 
-				currentSession.end().then(x=>{
-				const constraints = { video: {facingMode: 'environment' }};
+            const depthData = frame.getDepthInformation(view); 
+            if (view.camera && depthData && captureNext) {
+				captureNext =false
+				dcamera = view.camera
+				camBinding = glBinding.getCameraImage(dcamera);
+				texture1 = drawCameraCaptureScene(gl, camBinding,  dcamera.width, dcamera.height)
 
-				if(document.getElementsByTagName('video').length>1){
-					document.body.removeChild(document.getElementsByTagName('video')[1])
+				whratio = viewport.width/viewport.height
+				scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov/(2*360) )
+                const geometry = new THREE.PlaneGeometry(scaleGeo,  scaleGeo*whratio, depthData.width-1, depthData.height-1);
+				const vertices = geometry.attributes.position.array;
+				let data = new Uint8Array(depthData.data)
+				let convRate = depthData.rawValueToMeters
+				for ( let  j = 0, k = 0, i = 0, l = data.length; j < l; j+=2, k+=3) {
+					zdistance = convRate*(data[ i ]+data[ i+1 ]*255)
+					// near frucrum is camera plane?
+					vertices[ k ] = vertices[ k ]*zdistance;
+					vertices[ k + 1 ] = vertices[ k + 1 ]*zdistance ;
+					vertices[ k + 2 ] =  - zdistance ;
+					i+= 2
+
 				}
-		  		navigator.mediaDevices.getUserMedia(constraints).then( stream => {
-					 console.log(`using the webcam successfully...`);
-		  			video = document.getElementById('userCam')
-		  			video.srcObject = stream; 
-		  			mesh.material.map = new THREE.VideoTexture(video)
-					mesh.material.needsUpdate =true 
-
-        			let options = {
-        			  requiredFeatures: ['dom-overlay'],
-        			  domOverlay: { root: document.body },
-        			};
-					var sessionInit = getXRSessionInit( 'immersive-ar', {
-						mode: 'immersive-ar',
-						referenceSpaceType: 'local', // 'local-floor'
-						sessionInit: options
-					});
-					
-					navigator.xr.requestSession( 'immersive-ar', sessionInit ).then( onSessionStarted );
-		  		})
-				})
-			}
-			if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-					  
-					  
-				mesh.material.needsUpdate =true 
+				mesh = new THREE.Mesh( geometry, new THREE.ShaderMaterial() );
+				mesh.material = new THREE.ShaderMaterial( { 
+					uniforms : {
+						uSampler: { value: new THREE.DataTexture(texture1, dcamera.width, dcamera.height) },
+						coordTrans: {value:{
+							x:1/viewport.width,
+							y:1/viewport.height
+						}}
+					},
+					vertexShader:  document.getElementById( 'vertexShader' ).textContent,
+					fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+				} )
+				
+				mesh.quaternion.copy(camera.quaternion)
+				mesh.position.copy(camera.position)
+				mesh.rotateZ(3*Math.PI/2)
+				// mesh.material.wireframe = true
+				scene.add( mesh );
+            } else {
+              console.log('unavailable')
 			}
         }
 	}
 }
-}
-
-count = 0
-
 
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -186,6 +286,6 @@ button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:2re
 document.body.appendChild(button)
 document.getElementById('ArButton').addEventListener('click',x=>AR())
       
-let captureButton = document.getElementById('captureButton').addEventListener('click',()=>{
+let captureButton = document.getElementById('captureMesh').addEventListener('click',()=>{
 	captureNext = true;
 })
