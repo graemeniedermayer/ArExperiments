@@ -7,6 +7,19 @@ let clock = new THREE.Clock()
 velMax = 0.25
 first = true
 let lastPos = new THREE.Vector3()
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+let cartesianToSpherical = (x,y,z) => {
+    let r = Math.sqrt(x**2+y**2+z**2)
+    let theta = Math.atan2(y,x)
+    let phi = Math.acos(z/ r)
+    return [r, theta, phi]
+}
+let sphereToCartesian = ( r, theta, phi) => {
+	let x= r * Math.sin(phi)* Math.cos(theta)
+	let z= r * Math.sin(phi)* Math.sin(theta)
+	let y= r * Math.cos(phi)
+    return [x, y, z]
+}
 
 function getXRSessionInit( mode, options) {
   	if ( options && options.referenceSpaceType ) {
