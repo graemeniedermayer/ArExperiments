@@ -17,26 +17,6 @@
 			}
 		</style>
 	</head>
-  <body><script id="vertexShader1" type="x-shader/x-vertex">
-	attribute vec4 aVertexPosition;
-	varying vec2 vUv;
-	void main(void) {
-	  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-	  vUv = uv.yx;
-	  }
-   
-  </script>
-  <script id="fragmentShader1" type="x-shader/x-fragment">
-	uniform sampler2D uSampler;
-	uniform vec2 coordTrans;
-	varying vec2 vUv;
-	void main(void) {
-	  vec4 col = texture2D(uSampler, vUv.yx);
-	  gl_FragColor.rgb = col.rgb;
-	  gl_FragColor.a = 1.0;
-	}
-	  
-  </script> 
     <script id="vertexShader" type="x-shader/x-vertex">
       attribute vec4 aVertexPosition;
       varying vec2 vUv;
@@ -47,11 +27,11 @@
      
     </script>
     <script id="fragmentShader" type="x-shader/x-fragment">
-      uniform sampler2D uSampler;
+     uniform sampler2D uSampler;
       uniform vec2 coordTrans;
-      uniform vec2 geoTrans;
+	  uniform vec2 geoTrans;
       uniform vec3 velocity;
-      uniform mat3 dir;
+	  uniform mat3 dir;
       varying vec2 vUv;
       uniform float vel; 
       vec3 hsl2rgb( in vec3 c ){
@@ -88,19 +68,17 @@
       	return vec3( h, s, l );
       }
       
-
       void main(void) {
         vec4 col = texture2D(uSampler, vUv.yx);
         vec3 hsl = rgb2hsl(col.xyz);
-	vec3 a = (dir * vec3(geoTrans*(coordTrans * gl_FragCoord.xy - vec2(0.5,0.5)), -1.25));
-	float cosTheta = dot(a,velocity)/(length(a)*vel);
-	float gamma = sqrt(1.0 - vel*vel);
-	float freq1 = gamma * ( mod(hsl.x, 0.8 ) / ( 1.0 + vel*cosTheta  ));
-	freq1 = clamp( freq1, 0.0, 0.8);
+		vec3 a = (dir * vec3(geoTrans*(coordTrans * gl_FragCoord.xy - vec2(0.5,0.5)), -1.25));
+		float cosTheta = dot(a,velocity)/(length(a)*vel);
+		float gamma = sqrt(1.0 - vel*vel);
+		float freq1 = gamma * ( mod(hsl.x, 0.8 ) / ( 1.0 + vel*cosTheta  ));
+		freq1 = clamp( freq1, 0.0, 0.8);
         gl_FragColor.rgb = hsl2rgb( vec3( freq1, hsl.yz) );
         gl_FragColor.a = 1.0;
       }
-        
     </script> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 		  
