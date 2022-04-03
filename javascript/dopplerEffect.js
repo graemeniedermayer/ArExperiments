@@ -123,13 +123,17 @@ function onXRFrame(t, frame) {
 				lastPos = new THREE.Vector3().copy(camera.position)
 				mesh = new THREE.Mesh( geometry, new THREE.ShaderMaterial( { 
 					uniforms : {
+						dir: {value: new THREE.Matrix3()},
 						vel: {value: 0.5},
-						fov: {value: camera.fov*Math.PI/180},
 						uSampler: {value:  new THREE.Texture(camBinding) },
 						velocity: {value: new THREE.Vector3()},
 						coordTrans: {value:{
-							x:1/window.innerWidth,
-							y:1/window.innerHeight
+							x:1/viewport.width,
+							y:1/viewport.height
+						}},
+						geoTrans: {value:{
+							x:scaleGeo*whratio,
+							y:scaleGeo
 						}}
 					},
 					vertexShader:  document.getElementById( 'vertexShader' ).textContent,
@@ -141,17 +145,22 @@ function onXRFrame(t, frame) {
 				mesh.rotateZ(3*Math.PI/2)
 				scene.add( mesh );
 			}else if (view.camera ) {
-				velocity = ( ( lastPos.sub(camera.position ) ).multiplyScalar(1/(velMax*clock.getDelta())) ).clampLength(0,0.9999999);
+				velocity = ( ( lastPos.sub(camera.position ) ).multiplyScalar(1/(velMax*clock.getDelta())) )
+				let [r, theta, phi] = cartesianToSpherical(...velocity.toArray())
+				r = 2/(1+Math.E**(-r*sigmoidFact))-1
+				velocity = new THREE.Vector3( ...sphereToCartesian(r,theta,phi) )
 				lastPos = camera.position.clone();
+				mesh.material.uniforms.dir.value = new THREE.Matrix3().getNormalMatrix( new THREE.Matrix4().makeRotationFromQuaternion(camera.quaternion) )
 				mesh.material.uniforms.vel.value = velocity.length()
 				mesh.material.uniforms.velocity.value = velocity
 				mesh.material.uniformsNeedUpdate=true
 				// make a standard
   				mesh.quaternion.copy(camera.quaternion)
   				mesh.position.copy(camera.position.clone()
-				  .add(new THREE.Vector3(0,0,-1)
-				  .applyQuaternion(camera.quaternion))
+				  .add(new THREE.Vector3(0,0,distanceToCamera)
+				  	.applyQuaternion(camera.quaternion)
 				  )
+				)
 				  
 			} else {
               console.log('unavailable')
