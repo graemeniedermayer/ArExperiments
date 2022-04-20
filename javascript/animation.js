@@ -36,7 +36,7 @@ function init() {
 	camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.001, 10 );
 	
 	var loader = new THREE.GLTFLoader()
-	loader.load( './data/abomination.gltf', function ( gltf ) {
+	loader.load( '../data/abomination.gltf', function ( gltf ) {
 
 		gltf.scene.scale.x = scale;
 		gltf.scene.scale.y = scale;
