@@ -1,6 +1,6 @@
 // WORK IN PROGRESS
 var camera, scene, renderer, button;
-// list of sounds
+// list of sounds this FS is heavily copied from https://github.com/simondevyoutube/ThreeJS_Tutorial_3DSound/blob/main/main.js
 const FS_DECLARATIONS = `
 uniform sampler2D audioDataTexture;
 uniform vec2 iResolution;
