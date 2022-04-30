@@ -1,23 +1,32 @@
 // WORK IN PROGRESS
 var camera, scene, renderer, button;
 
+
 soundsListener = [
 // direction?
 	{
-		position:[1,0,-1.5],
-		name:'Garden.mp3'
+		position:[4.3,0,-6],
+		name:'../data/sound/fences.m4a',
+		title:'fence',
+		color:0x00ff00
 	},
 	{
-		position:[-1,0,-1.5],
-		name:'Tree.mp3'
+		position:[0,0,-2.1],
+		name:'../data/sound/sidewalks.m4a',
+		title:'sidewalk',
+		color:0xff00ff
 	},
 	{
-		position:[-1,-1,-0.5],
-		name:'Grass.mp3'
+		position:[-2.3,-1,-4.1],
+		name:'../data/sound/lawn.m4a',
+		title:'lawn',
+		color:0xff0000
 	},
 	{
-		position:[1,0,-0.5],
-		name:'Fence.mp3'
+		position:[3.3,-1,-4.1],
+		name:'../data/sound/garden.m4a',
+		title:'garden',
+		color:0x0000ff
 	}
 ]
 
