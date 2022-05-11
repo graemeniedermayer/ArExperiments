@@ -64,7 +64,7 @@ def applyInverseQuaternion( v, q ):
     x = v[0]
     y = v[1]
     z = v[2] 
-
+#     yes this is in fact correct q[0] and q[1] need to be switched
     qx = -q[1]
     qy = -q[0]
     qz = -q[2] 
