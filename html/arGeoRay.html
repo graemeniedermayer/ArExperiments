@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>AR</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<link rel="stylesheet" type="text/css" href="/static/eave/css/homeColor.css" />
+		<link rel="stylesheet" type="text/css" href="/static/eave/css/homeStyle.css" />
+		<!-- WebXR Device API (For Chrome M76+), expires 09/09/2019 -->
+		<style type="text/css">
+			body .dg li.title,
+			body .dg li:not(.folder),
+			body .dg.main .close-button {
+				background-color: rgba(0, 0, 0, 0.5);
+			}
+
+			body {
+				background-color: black;
+			}
+		</style>
+	</head>
+	<script type="x-shader/x-vertex" id="vertexshader">
+		attribute float size;
+		attribute vec3 customColor;
+		varying vec3 vColor;
+		varying float zdist;
+		void main() {
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			zdist =  1.1;
+			vColor = customColor * vec3( zdist , zdist , zdist );
+			gl_PointSize = size * ( 400.0 / -mvPosition.z );
+			gl_Position = projectionMatrix * mvPosition;
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragmentshader">
+		uniform vec3 color;
+		uniform sampler2D texture;
+		varying vec3 vColor;
+		void main() {
+			gl_FragColor = vec4( color * vColor, 1.0 );
+		}
+	</script>
+	<body>
+		<div id="rayDiv" style="position:absolute;top:2rem;"></div>
+		<div id="accDiv" style="position:absolute;right:0rem;top:2rem;"></div>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.min.js"></script>
+		<script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+		<script src="../javascript/arGeoRaycasting.js"></script>
+	</body>
+</html>
