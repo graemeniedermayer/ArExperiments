@@ -25,6 +25,9 @@ from layers import disp_to_depth
 from utils import download_model_if_doesnt_exist
 from evaluate_depth import STEREO_SCALE_FACTOR
 
+
+"""Function to predict for a single image or folder of images
+"""
 if torch.cuda.is_available():
     device = torch.device("cuda")
 else:
@@ -55,8 +58,8 @@ loaded_dict = torch.load(depth_decoder_path, map_location=device)
 depth_decoder.load_state_dict(loaded_dict)
 depth_decoder.to(device)
 depth_decoder.eval()
-
-def tensorFunc(original_width, original_height, image):
+index = 0
+def tensorFunc(original_width, original_height, image,index):
 
 
     # PREDICTING ON EACH IMAGE IN TURN
@@ -84,19 +87,23 @@ def tensorFunc(original_width, original_height, image):
         colormapped_im = (mapper.to_rgba(disp_resized_np)[:, :, :3] * 255).astype(np.uint8)
         im = pil.fromarray(metric_depth[0,0,:,:])
 
-    np.save('imageOut.npy', im)
+    np.save('imageOut'+str(index)+'.npy', im)
     return np.array(im)
-    
+
+import time
 @csrf_exempt
-def depth(request):
-    image = np.array(json.loads(request.POST.get("image"))).reshape(640,192)
+def monodepth2(request):
+    image = np.array(json.loads(request.POST.get("image"))).reshape(192,640).T
     pose = json.loads(request.POST.get("pose"))
-    np.save('image.npy', image)
+    global index
+    index+=1
+    np.save('image'+str(index)+'.npy', image)
     width, height = pose
-    imageOut = tensorFunc( width, height, image)
+    imageOut = tensorFunc( width, height, image,index)
     imageWidth = imageOut.shape[0]
     imageHeight = imageOut.shape[1]
     return HttpResponse(
         json.dumps( [imageOut.reshape(imageWidth*imageHeight).tolist() , imageWidth, imageHeight] )
     )
+
 
