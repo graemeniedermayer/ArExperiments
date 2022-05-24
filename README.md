@@ -30,25 +30,10 @@ Many of these experiments require chrome flags enabled specifically: Experimenta
 ### SSL certificates
 Most of these html pages must be served over SSL. These files should work on local server; however, local network servers will have issues. Unless you're running the server off of the phone you'll have difficulties without an SSL certificate.
 
-## Experiments
+## Core Experiments
 
 ### Skeleton
 Is a minimal boilerplate for building 3d webXR apps
-
-### Regina
-Uses google's GIS data to build a subsection of regina in AR
-
-### Many Bodies
-Shows an N-body simulation in ar.
-
-### Magnetometer
-Shows the magnetometers recordings in augmented reality 
-
-### Grain Elevator
-An photogrammetry experiment. Using photos to create a mesh then placing it back into AR.
-
-### ArRuler
-Find the absolute distance between two points in free space. Can be used as a ruler through walls. error is somewhere between 1-10% (so not great).
 
 ### ArRecorder
 Saves a txt file on phone of the cameras position + quaternion. This could be used to transform a real camera into a 3d camera. Also shows an animation example for recording.
@@ -65,6 +50,17 @@ Converts the depth information into an image
 ### Camera Access
 This works by dropping out of AR temporarily and taking a screen capture from a video and then restarting the AR session. Super hacky.
 
+## Physics Experiments
+
+### Many Bodies
+Shows an N-body simulation in ar.
+
+### Magnetometer
+Shows the magnetometers recordings in augmented reality 
+
+### ArRuler
+Find the absolute distance between two points in free space. Can be used as a ruler through walls. error is somewhere between 1-10% (so not great).
+
 ### Hydrogen Atom
 This uses a worker for the heavy computation and hows hydrogen atom. 
 
@@ -73,6 +69,17 @@ Uses the bullet engine in combination with the depth api
 
 ### Magnetic Dipole Finder
 Uses dipoles to estimate large metal objects
+
+### Doppler Effect
+This uses shaders to alter the light with the users speed to simulation the relativitic doppler effect.
+
+## Other Experiments
+
+### Grain Elevator
+An photogrammetry experiment. Using photos to create a mesh then placing it back into AR.
+
+### Regina
+Uses google's GIS data to build a subsection of regina in AR
 
 ## Goal Experiments
  
