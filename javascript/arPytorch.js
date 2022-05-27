@@ -1,8 +1,87 @@
-let scene, uniforms, renderer, light, camera, camBinding, gl, texture1, shaderMaterial, scaleGeo, whratio, glBinding, dcamera, shaderProgram, mesh; 
+let scene, uniforms, renderer, light, camera, camBinding, gl, texture1, shaderMaterial, scaleGeo, whratio, glBinding, dcamera, ctx, shaderProgram, mesh; 
       // XR globals.
+      let captureClick;
       let xrButton = null;
       let xrRefSpace = null;
 let captureNext = true
+getCanvas = () =>{
+	let canvas = document.createElement('canvas');
+  	canvas.width = 512;
+	canvas.height= 512;
+	let el = document.createElement('div');
+	// el.style.position
+	el.style.position= 'relative';
+	el.appendChild(canvas)
+	document.body.appendChild(el)
+  	let ctx = canvas.getContext('2d');
+	ctx.fillStyle=  "#FFFFFF";
+	ctx.fillRect(0, 0, canvas.width, canvas.height );
+	return canvas
+}
+function hslToRgb(h, s, l){//from stackoverflow
+    var r, g, b;
+    if(s == 0){
+        r = g = b = l; // achromatic
+    }else{
+        var hue2rgb = function hue2rgb(p, q, t){
+            if(t < 0) t += 1;
+            if(t > 1) t -= 1;
+            if(t < 1/6) return p + (q - p) * 6 * t;
+            if(t < 1/2) return q;
+            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        }
+        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        var p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+
+function xwwwform(jsonObject){
+	return Object.keys(jsonObject).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(jsonObject[key])).join('&');
+}
+// expect flat image
+function greyScale(image){
+    
+    const newImage = new Uint8Array(image.length/ 4);
+    for(let i= 0; i< image.length; i+=4){
+        newImage[i/4] = 0.299 * image[i] + 0.587 * image[i+1] + 0.114 * image[i+2]
+        // could be multiplied to for alpha image[i+3]
+    }
+    return newImage
+}
+// expect flat greyscale image640x192
+function downScale( image, originalWidth, originalHeight, goalWidth = 640, goalHeight = 192){
+    // averageMath
+    heightRatio = originalWidth / goalWidth
+    widthRatio = originalHeight/goalHeight
+    const newImage = new Uint8Array(goalWidth*goalHeight);
+    for(let i=0; i < goalWidth; i++){
+        for(let l = 0; l<goalHeight; l++){
+            sum = 0
+            count = 0
+            for(let k=0; k<heightRatio; k++){
+                for(let j=0; j<widthRatio; j++){
+                    try{
+                    sum += image[ 
+                        (Math.round(i*heightRatio) + j)*originalHeight + 
+                        (Math.round(l*widthRatio) + k)]
+                    count+=1
+                    }catch(e){
+                        // non indexed
+                    }
+                }
+            }
+            newImage[i+goalWidth*l] = sum/count
+        }
+    }
+    
+    return newImage
+}
 
 function getXRSessionInit( mode, options) {
   	if ( options && options.referenceSpaceType ) {
@@ -51,35 +130,58 @@ function init(){
   document.body.appendChild( renderer.domElement );
   window.addEventListener( 'resize', onWindowResize, false );
 
-  const geometry 
   whratio = window.innerWidth/ window.innerHeight 
-  scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov/(2*360) )= new THREE.PlaneGeometry(scaleGeo,  scaleGeo*whratio, window.innerWidth, window.innerHeight );
-  mesh = new THREE.Mesh( geometry, new THREE.ShaderMaterial() );
-  mesh.material = new THREE.ShaderMaterial( { 
-	  uniforms : {
-		  // uSampler: { value: new THREE.DataTexture(texture1, dcamera.width, dcamera.height) },
-		  coordTrans: {value:{
-			  x:1/viewport.width,
-			  y:1/viewport.height
-		  }}
-	  },
-	  vertexShader:  document.getElementById( 'vertexShader' ).textContent,
-	  fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-  } )
+  scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov/(2*360) )
+  const geometry = new THREE.PlaneGeometry(scaleGeo,  scaleGeo*whratio, window.innerWidth, window.innerHeight );
+
+  let canvas = getCanvas()
+
+  canvas.width = 192;
+  canvas.height= 640;
+  ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  mesh = new THREE.Mesh( geometry, new THREE.MeshStandardMaterial() );
   scene.add(mesh)
 }
-upateFunction = (image, imageWidth, imageHeight)=>{
-	mesh = new THREE.Mesh( geometry, new THREE.ShaderMaterial() );
+updateFunction = (image, imageWidth, imageHeight)=>{
 	// size oe
-	mesh.material.uSampler.value =  new THREE.DataTexture(texture1, imageWidth, imageHeight)
-	mesh.material.needUpdate = true
+
+    
+    geometry = new THREE.PlaneGeometry(scaleGeo,  scaleGeo*whratio, imageWidth, imageHeight );
+    
+    imgData = ctx.createImageData(imageWidth, imageHeight);
+    imgData.data = Uint8Array.from(image)
+    for(let i=0; i<imageWidth*imageHeight; i++){
+        imgData.data[4*i]   = image[i] 
+        imgData.data[4*i+1] = image[i]
+        imgData.data[4*i+2] = image[i]
+        imgData.data[4*i+3] = 255
+    }
+    // mesh = new THREE.Mesh( geometry, new THREE.MeshStandardMaterial({map: new THREE.Texture(imgData)}) );
+    mesh = new THREE.Mesh( geometry, new THREE.ShaderMaterial() );
+    mesh.material = new THREE.ShaderMaterial( { 
+        uniforms : {
+            uSampler: { value: new THREE.DataTexture(imgData.data, imageWidth, imageHeight) },
+            coordTrans: {value:{
+                x:1/imageWidth,
+                y:1/imageHeight
+            }}
+        },
+        vertexShader:  document.getElementById( 'vertexShader' ).textContent,
+        fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+    } )
+    mesh.quaternion.copy(camera.quaternion)
+    mesh.position.copy(camera.position)
+    mesh.position.add(new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion))
+    mesh.rotateZ(3*Math.PI/2)
+    scene.add( mesh );
 }
 
-updateServer = (pose, image) => fetch('https://computeServer.ca/pyTorch/',{
+updateServer = (pose, image) => fetch('https://compute.ca/pyTorch/',{
         method: 'POST',
         body: xwwwform({
             'pose':pose,
-            'image':image
+            'image': JSON.stringify(Array.from(image) )
         }),
         mode:'cors',  
         headers: {
@@ -89,9 +191,10 @@ updateServer = (pose, image) => fetch('https://computeServer.ca/pyTorch/',{
     })
     .then(x=>x.json())
     .then(x=>{
-        let {spectra, imageWidth, imageHeight} = x
-		spec = spectra.map(x=>parseFloat(x))
-        updateFunction(spec)
+        let [spectra, imageWidth, imageHeight] = x
+
+		spec = spectra.map(x=>12*parseFloat(x))
+        updateFunction(spec, imageWidth, imageHeight)
         captureNext = true
 
     }).catch(x=>console.log(x))
@@ -264,16 +367,17 @@ function onXRFrame(t, frame) {
             const viewport = baseLayer.getViewport(view);
             gl.viewport(viewport.x, viewport.y,
                         viewport.width, viewport.height);
-            if (view.camera &&  captureNext) {
+            if (view.camera &&  captureNext && captureClick) {
 				captureNext =false
+                captureClick = false
 				dcamera = view.camera
 				camBinding = glBinding.getCameraImage(dcamera);
 				texture1 = drawCameraCaptureScene(gl, camBinding,  dcamera.width, dcamera.height)
 				
-				mesh.quaternion.copy(camera.quaternion)
-				mesh.position.copy(camera.position)
-				mesh.rotateZ(3*Math.PI/2)
-				updateServer(texture1)
+                shape = JSON.stringify([dcamera.width, dcamera.height])
+                // fine..
+				updateServer(shape, 
+                    downScale( greyScale(texture1), dcamera.height, dcamera.width, 640, 192))
             } else {
               console.log('unavailable')
 			}
@@ -299,3 +403,7 @@ button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:2re
     
 document.body.appendChild(button)
 document.getElementById('ArButton').addEventListener('click',x=>AR())
+
+document.getElementById('captureButton').addEventListener('click',()=>{
+	captureClick = true;
+})
