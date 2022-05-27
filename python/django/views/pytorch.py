@@ -93,7 +93,7 @@ def tensorFunc(original_width, original_height, image,index):
 import time
 @csrf_exempt
 def monodepth2(request):
-    image = np.array(json.loads(request.POST.get("image"))).reshape(192,640).T
+    image = np.array(json.loads(request.POST.get("image"))).reshape(192,640).T.reshape(640,192)
     pose = json.loads(request.POST.get("pose"))
     global index
     index+=1
@@ -103,7 +103,7 @@ def monodepth2(request):
     imageWidth = imageOut.shape[0]
     imageHeight = imageOut.shape[1]
     return HttpResponse(
-        json.dumps( [imageOut.reshape(imageWidth*imageHeight).tolist() , imageWidth, imageHeight] )
+        json.dumps( [imageOut.T.reshape(192,640).reshape(imageWidth*imageHeight).tolist() , imageWidth, imageHeight] )
     )
 
 
