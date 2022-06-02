@@ -1,5 +1,5 @@
 # Augmented Reality Experiments
-A set of experiments using augmented reality. WebXR + Threejs are the predominate tools used.
+A set of experiments using augmented reality. WebXR + Threejs are the predominate tools used. This is a companion repo to the youtube channel https://www.youtube.com/channel/UC_EkMqKOm7Ej_g03Ryv0UZw/videos
 
 ## Demos
 
