@@ -5,6 +5,7 @@ import json
 import numpy as np,scipy.sparse.linalg as sciSolve, scipy
 from django.views.decorators.csrf import csrf_exempt
 import logging
+from scipy import interpolate
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ D = scipy.sparse.spdiags(diags, np.array([-1,0,1]), N, N)
 discreteLaplace = (scipy.sparse.kronsum(scipy.sparse.kronsum(D,D),D))
 potentialCap = 10000000
 baseV = np.zeros((N, N, N))
+boundaryCond = (np.zeros((N, N, N)) > 0)
 # baseV = np.pad(baseV, pad_width=1, mode='constant', constant_values=potentialCap) Border
 Vsub2 = np.zeros((N, N, N))
 Vsub1 = np.zeros((N, N, N))
@@ -32,7 +34,16 @@ y = np.linspace(-L/2,L/2,N)
 z = np.linspace(-L/2,L/2,N)
 velocities = np.zeros((N,N,N,3))
 scalars = np.zeros((N,N,N))
-X,Y,Z= np.meshgrid(x,y,z)
+X,Y,Z= np.meshgrid(x,y,z, indexing='ij')
+
+coordinates = np.concatenate(
+        (
+            X[..., np.newaxis],
+            Y[..., np.newaxis],
+            Z[..., np.newaxis],
+        ),
+        axis=-1,
+    )
 boundingSquare = {
     "minx":-0.5,
     "maxx":0.5,
@@ -101,47 +112,66 @@ def potential(camPos, camQuat, conv, width, height, image):
 
 # using stable fluids jos stam
 
+# using stable fluids jos stam
 
-dt = 0.02
-viscosity = 0.1
-forceFactor = 0.002
+
+dt = 0.1
+viscosity = 0.0001
 coords = np.array([X.flatten(), Y.flatten(), Z.flatten()])
 
-# force
-def addForce(field, forceField):
-    return field + forceField*dt
 
 # advect backtracing streamlines (intake is flattened)
+# check
 def addAdvection(field, vectorField):
-    backTrackPositions = np.clip(field - dt* vectorField, -L/2, L/2)
-    advectedField = scipy.interpolate.interpn(
+    backTrackPositions = np.clip(coordinates - dt* vectorField, -L/2, L/2)
+    advectedField = interpolate.interpn(
         points = (x,y,z),
         values= field,
         xi=backTrackPositions
     )
+    advectedField[boundaryCond] = np.array([0,0,0])
     return advectedField
 
 # diffuse
-def addDiffusion(field, vectorFieldFlattened):
+def addDiffusion(vectorFieldFlattened):
     vectorField = vectorFieldFlattened.reshape(N,N,N,3)
-    laplace = discreteLaplace*field/(unitLength)**2#does this work?
-    diffusionApplied = vectorField + viscosity*dt*laplace
+    # should we use sparse or 
+    laplace = discreteLaplace @ vectorFieldFlattened.reshape(N**3,3)/(unitLength)**2#does this work?
+    diffusionApplied = vectorField - viscosity*dt*laplace.reshape(N,N,N,3)
+    diffusionApplied[boundaryCond] = np.array([0,0,0])
     return diffusionApplied.flatten()
+
+def partial(field, axis=0):
+    diff = np.zeros_like(field)
+    if(axis==0):
+        diff[1:-1, 1:-1, 1:-1] = (
+            (field[2:,1:-1,1:-1]-field[:-2,1:-1,1:-1])/(2*unitLength)
+        )
+    elif(axis==1):
+        diff[1:-1, 1:-1, 1:-1] = (
+            (field[1:-1,2:,1:-1]-field[1:-1,:-2,1:-1])/(2*unitLength)
+        )
+    elif(axis==2):
+        diff[1:-1, 1:-1, 1:-1] = (
+            (field[1:-1,1:-1,2:]-field[1:-1,1:-1,:-2])/(2*unitLength)
+        )
+    return diff
+
 
 def divergence(field):
     # This isn't including the boundary conditions...
     return ((
-        (field[1:,:,:,0]-field[:-1,:,:,0])+
-        (field[:,1:,:,0]-field[:,:-1,:,0])+
-        (field[:,:,1:,0]-field[:,:,:-1,0])
-    )/2*unitLength)
+        partial(field,0)[:,:,:,0]+
+        partial(field,1)[:,:,:,1]+
+        partial(field,2)[:,:,:,2]
+    ))
 
 def gradient(field):
     return np.concatenate(
     (
-        (field[1:,:,:,0]-field[:-1,:,:,0]).reshape(N,N,N,1)/2*unitLength,
-        (field[:,1:,:,0]-field[:,:-1,:,0]).reshape(N,N,N,1)/2*unitLength,
-        (field[:,:,1:,0]-field[:,:,:-1,0]).reshape(N,N,N,1)/2*unitLength
+        partial(field,0)[..., np.newaxis],
+        partial(field,1)[..., np.newaxis],
+        partial(field,2)[..., np.newaxis]
     ),
         axis = -1
     )
@@ -150,15 +180,49 @@ def curl(field):
     pass
 
 def poisson(field_flattened):
-    field = field_flattened.reshape(N,N,N)
-    return (discreteLaplace*field/(unitLength)**2).flatten()
+    return ((discreteLaplace @ field_flattened)/unitLength**2)
 
 # project
-def addProjection(w3k, k, kmag):
-    # is this the right magnitude?
-    kmag = np.linalg.norm(k,ord=1)
-    w4k = w3k - 1/kmag**2 * np.dot(k,w3k) * k
-    return w4k
+
+import time
+forceField = np.zeros((N,N,N,3))
+def fluidFunc():
+    global forceField
+    global velocities
+    
+    forceField[ int(N/2-3):int(N/2+3), int(N/2-3):int(N/2+3),-5:-2,  2] = min(0,-4+0.4*i)
+
+    # 1. Force (checked)
+    velocitiesForce = velocities + forceField*dt
+    velocitiesForce[boundaryCond] = np.array([0,0,0])
+
+    # 2. Advection (checked)
+    velocitiesAdv = addAdvection(velocitiesForce, velocitiesForce)
+
+    # 3. Diffusion
+    velocitiesDif = sciSolve.cg(
+        A = sciSolve.LinearOperator(
+            shape = ( ((N**3)*3), ((N**3)*3) ),
+            matvec = addDiffusion
+        ),
+        b = velocitiesAdv.flatten(),
+        maxiter = None
+    )[0].reshape(N,N,N,3)
+    # 4.1. Pressure
+    pressure = sciSolve.cg(
+        A= sciSolve.LinearOperator(
+            shape = ( (N**3), (N**3) ),
+            matvec = poisson
+        ),
+        b= divergence(velocitiesDif).flatten(),
+        maxiter = None
+    )[0].reshape(N,N,N)
+    # 4.2. Projections
+    
+    velocitiesProj =  velocitiesDif - gradient(pressure)
+    velocities = velocitiesProj
+    return velocities
+
 
 import time
 @csrf_exempt
@@ -166,33 +230,19 @@ def fluid(request):
     image = np.array(json.loads(request.POST.get("image")))
     fluid = json.loads(request.POST.get("fluid"))
     pose = json.loads(request.POST.get("pose"))
+    action = json.loads(request.POST.get("action"))
+    # parse action
+    
     camPos, camQuat, conversionRate, height, width = pose
     V = potential(camPos, camQuat, conversionRate, width, height, image)
     # steps 
-    forceField = forceFactor*(dt**2)*(V - 2*Vsub1 + Vsub2)
-    velocitiesForce = addForce(velocities, forceField)
-    velocitiesAdv = addAdvection(velocitiesForce, velocitiesForce)
-    velocitiesDif = sciSolve.cg(
-        A = sciSolve.LinearOperator(
-            shape = ( (N**3*3), (N**3*3) ),
-            matvec = addDiffusion
-        ),
-        b = velocitiesAdv.flatten(),
-        maxIter = None
-    )[0].reshape(N,N,N,3)
-    pressure = sciSolve.cg(
-        A= sciSolve.LinearOperator(
-            shape = ( (N**3), (N**3) ),
-            matvec = poisson
-        ),
-        b= divergence(velocitiesDif).flatten(),
-        maxIter = None
-    )[0].reshape(N,N,N)
-    velocitiesProj =  velocitiesDif - gradient(pressure)
-    velocities = velocitiesProj
+    global boundaryCond
+    boundaryCond = (V>0)
+    vels = fluidFunc()
     Vsub2 = Vsub1
     Vsub1 = V
     return HttpResponse(
-        json.dumps([])
+        json.dumps(vels.toList())
     )
+
 
