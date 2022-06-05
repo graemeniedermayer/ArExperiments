@@ -1,6 +1,5 @@
-from cv2 import Laplacian
-from django.shortcuts import render
-from django.http import HttpResponseRedirect, HttpResponse
+
+from django.http import HttpResponse
 import json
 import numpy as np,scipy.sparse.linalg as sciSolve, scipy
 from django.views.decorators.csrf import csrf_exempt
@@ -16,11 +15,10 @@ convRate = 0.00107
 # Center of the image
 scenePosition = np.array([0.0,0.5,-.5]) 
 sceneSize = np.array([1.0,1.0,1.0])
-glass = np.array(json.load(open('miniGlass.json')))
 
 #For math
-diag = np.ones([N],dtype='c8')
-diags = np.array([diag,-2*diag, diag],dtype='c8')
+diag = np.ones([N])
+diags = np.array([diag,-2*diag, diag])
 D = scipy.sparse.spdiags(diags, np.array([-1,0,1]), N, N)      
 discreteLaplace = (scipy.sparse.kronsum(scipy.sparse.kronsum(D,D),D))
 potentialCap = 10000000
@@ -110,14 +108,9 @@ def potential(camPos, camQuat, conv, width, height, image):
     
     return V
 
-# using stable fluids jos stam
 
-# using stable fluids jos stam
-
-
-dt = 0.1
+dt = 0.4
 viscosity = 0.0001
-coords = np.array([X.flatten(), Y.flatten(), Z.flatten()])
 
 
 # advect backtracing streamlines (intake is flattened)
@@ -190,7 +183,7 @@ def fluidFunc():
     global forceField
     global velocities
     
-    forceField[ int(N/2-3):int(N/2+3), int(N/2-3):int(N/2+3),-5:-2,  2] = min(0,-4+0.4*i)
+    forceField[ -5:-2, int(N/2-3):int(N/2+3), int(N/2-3):int(N/2+3),  0] *= 0.7
 
     # 1. Force (checked)
     velocitiesForce = velocities + forceField*dt
@@ -225,24 +218,34 @@ def fluidFunc():
 
 
 import time
+lastTime = time.time()
 @csrf_exempt
 def fluid(request):
+    global lastTime,dt
+    thisTime = time.time()
+    dt = thisTime-lastTime
+    lastTime = thisTime
+    global boundaryCond
+    global forceField
     image = np.array(json.loads(request.POST.get("image")))
-    fluid = json.loads(request.POST.get("fluid"))
+    # fluid = json.loads(request.POST.get("fluid"))
     pose = json.loads(request.POST.get("pose"))
     action = json.loads(request.POST.get("action"))
-    # parse action
+    if action['force']==1:
+        forceField[ -5:-2, int(N/2-3):int(N/2+3), int(N/2-3):int(N/2+3),  0] = -6
+    if action['reset']==1:
+        global velocities
+        velocities = np.zeros((N,N,N,3))
+        forceField = np.zeros((N,N,N,3))
     
     camPos, camQuat, conversionRate, height, width = pose
     V = potential(camPos, camQuat, conversionRate, width, height, image)
     # steps 
-    global boundaryCond
     boundaryCond = (V>0)
-    vels = fluidFunc()
-    Vsub2 = Vsub1
-    Vsub1 = V
+    vels = fluidFunc().reshape(N**3,3)
+    # Vsub2 = Vsub1
+    # Vsub1 = V
     return HttpResponse(
-        json.dumps(vels.toList())
+        json.dumps(vels.tolist())
     )
-
 
