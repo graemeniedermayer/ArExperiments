@@ -159,7 +159,7 @@ updateFunction = (newGrid)=>{
 	// geometry.attributes.position.needsUpdate = true;
 }
 // setup 5 simulatenous loops
-updateServer = (pose, image,actions) => fetch('https://compute.weaves.ca/returnFluid/',{
+updateServer = (pose, image,actions) => fetch('https://computeServer.ca/returnFluid/',{
         method: 'POST',
         body: xwwwform({
             'pose':pose,
