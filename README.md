@@ -77,7 +77,7 @@ Uses dipoles to estimate large metal objects
 This uses shaders to alter the light with the users speed to simulation the relativitic doppler effect.
 
 ## Experiments requiring a server
-A few of these examples requires a server for computing. Generally django was used but any server with a strong ML/Math libraries.
+A few of these examples requires a server for computing. These do not have live examples. Generally django was used but any server with a strong ML/Math libraries.
 
 ### Pytorch 
 Find depth with pytorch
