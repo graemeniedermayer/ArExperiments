@@ -8,8 +8,9 @@ let quat90x = new THREE.Quaternion().setFromEuler(new THREE.Euler( Math.PI/2, 0,
 let yAxis = [] //data in Y-Axis
 
 let scene = new THREE.Scene();
-let raycaster = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
+
+let planeId = 1;
+let allPlanes = new Map();
 
 var camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.1, 20000 );
 var renderer = new THREE.WebGLRenderer({antialias: true,alpha:true });
@@ -21,8 +22,6 @@ document.body.appendChild( renderer.domElement );
 renderer.xr.enabled = true;
 
 let intersectObjects = new Map();
-raycaster.linePrecision=0.05;
-raycaster.params.Points.threshold = 0.2;
 
 getCanvas = () =>{
 	let canvas = document.createElement('canvas');
@@ -105,70 +104,6 @@ function createGeometryFromPolygon(polygon) {
 let labels = []
 let data = []
 
-scrollTo(0,0)
-planes = []
-
-
-function worldToLocal( givenObject, worldVec){
-    localVec = new THREE.Vector3()
-    givenObject.updateMatrixWorld(); 
-	localVec.copy( worldVec )
-	.sub(givenObject.position)
-	.applyQuaternion( givenObject.quaternion.clone().invert() )
-	return {x:localVec.x, y:localVec.y};
-} 
-		
-
-function raycasterFunction( event) {
-	mouse.x = ( event.clientX / window.outerWidth) * 2 - 1;
-	mouse.y = -( event.clientY / window.outerHeight) * 2 + 1;
-	raycaster.setFromCamera( mouse, camera );
-	let intersects = []
-    intersectObjects.forEach(x=>{
-        inters.push(x.mesh)
-    })
-	intersects = raycaster.intersectObjects( inters );
-	return [intersects.length > 0 ? intersects[ 0 ]: undefined, raycaster.ray]
-}
-
-
-TOUCHSTATE = {}
-var onMouseStart = (e)=>{
-	let [obj, ray] = raycasterFunction(e)
-	TOUCHSTATE[ 'mouse' ] = obj
-	if( obj ? (obj.object ? obj.object.type =='Mesh' : false) :false){
-		clickCanvas(obj.object.material.map.image, worldToLocal(obj.object,obj.point), e.type)
-	}
-	// new object
-}
-var onTouchStart = (e)=>{
-	for( var j = 0; j < e.touches.length; j++ ) {
-		let [obj,ray] = raycasterFunction(e.touches[ j ])
-		if( obj ? (obj.object ? obj.object.type =='Mesh' : false) :false){
-			clickCanvas(obj.object.material.map.image, worldToLocal(obj.object,obj.point), e.type)
-		}
-	}
-}
-function clickCanvas(thisCanvas, point, res) {
-	let rect = thisCanvas.getBoundingClientRect();
-	let x =  (parseFloat(canvas1.upperCanvasEl.style.width)*(1/2+point.x));
-	let y = rect.top + parseFloat(canvas1.upperCanvasEl.style.height)*(1/2-point.y);
-	if(res =='touchmove')res = 'mousemove'
-	evt = new MouseEvent(res, {
-		clientX: x,
-		clientY: y
-	}),
-	canvas1.upperCanvasEl.dispatchEvent(evt);
-}
-
-
-window.addEventListener( 'mousedown', onMouseStart ,false);
-window.addEventListener( 'touchstart', onTouchStart ,false);
-window.addEventListener( 'mousemove', onMouseStart ,false);
-window.addEventListener( 'touchmove', onTouchStart ,false);
-window.addEventListener( 'mouseup', onMouseStart ,false);
-window.addEventListener( 'touchend', onTouchStart ,false);
-\
 var light = new THREE.AmbientLight( 0x404040, 7 ); // soft white light
 scene.add( light );
 var light = new THREE.DirectionalLight( 0xffffff );
@@ -248,7 +183,7 @@ function AR(){
 			mode: 'immersive-ar',
 			referenceSpaceType: 'local', // 'local-floor'
 			sessionInit: {
-				optionalFeatures: ['dom-overlay','anchors', 'dom-overlay-for-handheld-ar', 'plane-detection'],
+				optionalFeatures: ['dom-overlay', 'dom-overlay-for-handheld-ar', 'plane-detection'],
 				domOverlay: {root: document.body}
 			}
 		});
@@ -273,28 +208,28 @@ function AR(){
 count = 0
 function onXRFrame(t, frame) {
 	processPlanes(t, frame)
-	processAnchors(t, frame)
     const session = frame.session;
 	const referenceSpace = renderer.xr.getReferenceSpace();
     session.requestAnimationFrame(onXRFrame);
     const baseLayer = session.renderState.baseLayer;
     const pose = frame.getViewerPose(xrRefSpace);
 	render()
-	if (pose) {            
+	if (pose) {    
+		const ray = new XRRay(pose.transform);        
 		const hitTestResults = hitTest(frame, ray, referenceSpace);
 		const hitTestFiltered = filterHitTestResults(hitTestResults);
 		if (hitTestFiltered && hitTestFiltered.length > 0) {
 			hitResult = hitTestFiltered[0];
 
-			const hitMatrix = hitResult.hitMatrix;
+			// const hitMatrix = hitResult.hitMatrix;
 
-			hitMatrix[12] += 0.001; // move the reticle slightly away from the plane
-			hitMatrix[13] += 0.001; // center to prevent z-fighting with plane meshes
-			hitMatrix[14] += 0.001;
+			// hitMatrix[12] += 0.001; // move the reticle slightly away from the plane
+			// hitMatrix[13] += 0.001; // center to prevent z-fighting with plane meshes
+			// hitMatrix[14] += 0.001;
 
-			reticle.visible = true;
+			// reticle.visible = true;
 
-			reticle.matrix.fromArray(hitMatrix);
+			// reticle.matrix.fromArray(hitMatrix);
 		  }
 	}
 }
@@ -318,32 +253,6 @@ button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:2re
 document.body.appendChild(button)
 document.getElementById('ArButton').addEventListener('click',x=>AR())
 
-let planeId = 1;
-let allPlanes = new Map();
-
-function createGeometryFromPolygon(polygon) {
-    const geometry = new THREE.BufferGeometry();
-
-    const vertices = [];
-    const uvs = [];
-    polygon.forEach(point => {
-      vertices.push(point.x, point.y, point.z);
-      uvs.push(point.x, point.z);
-    })
-
-    const indices = [];
-    for(let i = 2; i < polygon.length; ++i) {
-      indices.push(0, i-1, i);
-    }
-
-    geometry.setAttribute('position',
-      new THREE.BufferAttribute(new Float32Array(vertices), 3));
-    geometry.setAttribute('uv',
-      new THREE.BufferAttribute(new Float32Array(uvs), 2))
-    geometry.setIndex(indices);
-
-    return geometry;
-  }
 
 planeMaterial =   new THREE.MeshBasicMaterial({
     map: new THREE.Texture( can1 ),
@@ -399,7 +308,6 @@ function processPlanes(timestamp, frame) {
           originGroup.visible = usePlaneOrigin.checked;
 
           planeMesh.add(originGroup);
-          allPlaneOrigins.push(originGroup);
 
           const planeContext = {
             id: planeId,
@@ -423,3 +331,27 @@ function processPlanes(timestamp, frame) {
       });
     }
   }
+function uploadFile(files){
+	if(files){
+		canvas1.clear()
+		for (let i = 0; i < files.length; i++) {
+		// doesn't this only use the last image
+    	  if (files[i].type.match(/^image\//)) {
+			file = files[i];
+			fabric.Image.fromURL(URL.createObjectURL(file), function(image) {
+           	  image.scaleToHeight(can1height);
+			  image.filters = []
+              canvas1.add(image);
+            });
+    	  }
+    	}
+	}
+	for(let i=0; i < lines.length; i++){
+		// mesh.alphaMap = new THREE.Texture(document.getElementById('droplines'))
+		mesh.map = new THREE.Texture(can1)	
+		// mesh.alphaMap.needsUpdate = true;
+		mesh.map.needsUpdate = true;
+	}
+}
+
+document.getElementById('file').addEventListener('change', (e) => uploadFile(e.target.files)); 
