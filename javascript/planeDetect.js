@@ -40,6 +40,9 @@ getCanvas = () =>{
 	return canvas
 }
 
+
+// ray cast to the plane
+
 can1 = document.getElementById('image')
 can1height = can1.offsetHeight
 can1width = can1.offsetWidth
@@ -216,21 +219,6 @@ function onXRFrame(t, frame) {
 	render()
 	if (pose) {    
 		const ray = new XRRay(pose.transform);        
-		const hitTestResults = hitTest(frame, ray, referenceSpace);
-		const hitTestFiltered = filterHitTestResults(hitTestResults);
-		if (hitTestFiltered && hitTestFiltered.length > 0) {
-			hitResult = hitTestFiltered[0];
-
-			// const hitMatrix = hitResult.hitMatrix;
-
-			// hitMatrix[12] += 0.001; // move the reticle slightly away from the plane
-			// hitMatrix[13] += 0.001; // center to prevent z-fighting with plane meshes
-			// hitMatrix[14] += 0.001;
-
-			// reticle.visible = true;
-
-			// reticle.matrix.fromArray(hitMatrix);
-		  }
 	}
 }
 
@@ -303,17 +291,11 @@ function processPlanes(timestamp, frame) {
 
           scene.add(planeMesh);
 
-          // Create plane origin visualizer:
-          const originGroup = baseOriginGroup.clone();
-          originGroup.visible = usePlaneOrigin.checked;
-
-          planeMesh.add(originGroup);
 
           const planeContext = {
             id: planeId,
             timestamp: plane.lastChangedTime,
             mesh: planeMesh,
-            origin: originGroup,
           };
 
           intersectObjects.set(plane, planeContext)
@@ -346,12 +328,8 @@ function uploadFile(files){
     	  }
     	}
 	}
-	for(let i=0; i < lines.length; i++){
-		// mesh.alphaMap = new THREE.Texture(document.getElementById('droplines'))
-		mesh.map = new THREE.Texture(can1)	
-		// mesh.alphaMap.needsUpdate = true;
-		mesh.map.needsUpdate = true;
-	}
+	planeMaterial.map = new THREE.Texture(can1)	
+	planeMaterial.map.needsUpdate = true;
 }
 
 document.getElementById('file').addEventListener('change', (e) => uploadFile(e.target.files)); 
