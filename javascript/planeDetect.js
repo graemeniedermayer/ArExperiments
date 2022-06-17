@@ -244,7 +244,7 @@ document.getElementById('ArButton').addEventListener('click',x=>AR())
 
 planeMaterial =   new THREE.MeshBasicMaterial({
     map: new THREE.Texture( can1 ),
-    opacity: 0.8,
+    opacity: 1.0,
     transparent: true,
 });
   
@@ -329,6 +329,8 @@ function uploadFile(files){
     	}
 	}
 	planeMaterial.map = new THREE.Texture(can1)	
+	planeMaterial.map.wrapT = THREE.RepeatWrapping;
+	planeMaterial.map.wrapS = THREE.RepeatWrapping;
 	planeMaterial.map.needsUpdate = true;
 }
 
