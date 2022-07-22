@@ -1,16 +1,22 @@
-let phoneCube, desktopCube;
+let phoneCube, desktopCube, socket;
 
-socket = new ReconnectingWebSocket(`wss://compute.weaves.ca/ws/desktopDevice/${channel}`, null ,{
+channelName = document.getElementById('channelName')
+document.getElementById('channelSubmit').addEventListener(e=>{
+  document.getElementById('channelSubmit').style.display = 'none'
+  channelName.style.display = 'none'
+  socket = new ReconnectingWebSocket(`wss://servername/ws/arMobile/${channelName.value}`, null ,{
     timeoutInterval: 2000, 
     maxReconnectAttempts: 10, 
     binaryType: 'arraybuffer'
   })
-socket.onmessage = e=>{
-    let {pos,quat} = JSON.parse(e.data)
+  socket.onmessage = e=>{
+    let {position, quaternion} = JSON.parse(e.data) 
     // update the camera object.
-}
-// when slider change
-socket.send()
+    phoneCube.position = new THREE.Vector3(...position)
+    phoneCube.quaternion = new THREE.Vector4(...quaternion)
+   }
+})
+
 
 // standard threejs scene
 
