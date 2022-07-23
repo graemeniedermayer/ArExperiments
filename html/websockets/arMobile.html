@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AR</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style type="text/css">
+        @import url(https://fonts.googleapis.com/css?family=Quicksand);
+        body .dg.main .close-button {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="channelName" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;top:0px;width:7rem;height:1rem;">
+    <input type="button" id="channelSubmit" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;top:1rem;width:7rem;height:1rem;">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="{% static 'websocketMobile.js' %}" type="module">
+  </script>
+</body>
+</html>
