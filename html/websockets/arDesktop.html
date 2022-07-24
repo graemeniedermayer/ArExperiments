@@ -1,4 +1,3 @@
-
 {% load static %}
 <!DOCTYPE html>
 <html>
@@ -18,15 +17,17 @@
     </style>
 </head>
 <body>
-    <input type="text" id="channelName" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;top:0px;width:7rem;height:1rem;">
-    <input type="button" id="channelSubmit" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;top:1rem;width:7rem;height:1rem;">
+    <input type="text" id="channelName" style="z-index:2;user-select:none;position:absolute;top:0px;width:7rem;height:1rem;">
+    <input type="button" id="channelSubmit" style="z-index:2;user-select:none;background:rgba(100,200,100,1);position:absolute;left:7.5rem;width:2rem;height:1rem;">
 
-    <input type="range" id="rangex" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;bottom:0px;width:10rem;height:1rem;">
-	<input type="range" id="rangey" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;bottom:2px;right:0px;width:10rem;height:1rem;">
-	<input type="range" id="rangez" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;bottom:4rem;right:0rem;width:10rem;height:1rem;">
-	 
+    <input type="range" id="rangex" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;bottom:0px;right:1rem;width:10rem;height:1rem;">
+	<input type="range" id="rangey" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;bottom:2rem;right:1rem;width:10rem;height:1rem;">
+	<input type="range" id="rangez" style="z-index:2;user-select:none;background:rgba(100,100,200,1);position:absolute;bottom:4rem;right:1rem;width:10rem;height:1rem;">
+    <script src="{% static 'reconnecting-websocket.min.js' %}"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
   <script src="{% static 'websocketDesktop.js' %}" type="module">
   </script>
 </body>
 </html>
+
