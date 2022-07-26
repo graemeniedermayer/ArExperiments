@@ -32,3 +32,6 @@ Many of these experiments require chrome flags enabled specifically: Experimenta
 ### SSL certificates
 Most of these html pages must be served over SSL. These files should work on local server; however, because you need to run these on mobile you usually need a simple server with SSL.
 
+### Django projects
+Many of the projects using django require a bit of extra work in setting up. I'm still looking into a cleaner method of sharing them.
+
