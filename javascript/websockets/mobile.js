@@ -1,28 +1,45 @@
 let  desktopCube;
-
-socket = new ReconnectingWebSocket(`wss://servername.ca/ws/arMobile/${channel}`, null ,{
-    timeoutInterval: 2000, 
-    maxReconnectAttempts: 10, 
-    binaryType: 'arraybuffer'
-  })
-//   each frame send to socket.
-
-socket.onmessage( e=>{
-    let {position, quaternion} = JSON.parse(e.data) 
-
-    desktopCube.position = new THREE.Vector3(...position)
-
-})
-
 // standard webxr scene
 
 function xwwwform(jsonObject){
 	return Object.keys(jsonObject).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(jsonObject[key])).join('&');
 }
 
-let camera, scene, renderer;
+let camera, scene, renderer, xrRefSpace, gl;
 
 scene = new THREE.Scene();
+
+const geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
+const material = new THREE.MeshStandardMaterial( {color: 0x00ff00} );
+desktopCube = new THREE.Mesh( geometry, material );
+scene.add( desktopCube );
+desktopCube.position.z -= 0.5
+
+
+var ambient = new THREE.AmbientLight( 0x222222 );
+scene.add( ambient );
+var directionalLight = new THREE.DirectionalLight( 0xdddddd, 1.5 );
+directionalLight.position.set( 0.9, 1, 0.6 ).normalize();
+scene.add( directionalLight );
+var directionalLight2 = new THREE.DirectionalLight( 0xdddddd, 1 );
+directionalLight2.position.set( -0.9, -1, -0.4 ).normalize();
+scene.add( directionalLight2 );
+
+document.getElementById('channelSubmit').addEventListener('click',e=>{
+	let channelName = document.getElementById('channelName')
+	document.getElementById('channelSubmit').style.display = 'none'
+	channelName.style.display = 'none'
+	socket = new ReconnectingWebSocket(`wss://servername.ca/ws/arMobile/${channelName.value}`, null ,{
+	  timeoutInterval: 2000, 
+	  maxReconnectAttempts: 10, 
+	  binaryType: 'arraybuffer'
+	})
+	socket.onmessage = e=>{
+		let {position} = JSON.parse(e.data) 
+		desktopCube.position.copy( new THREE.Vector3(...position))
+	
+	}
+  })
 
 camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.1, 20000 );
 renderer = new THREE.WebGLRenderer({antialias: true,alpha:true });
@@ -113,8 +130,6 @@ function AR(){
 		});
 }
 
-count = 0
-scaleVec = new THREE.Vector3(geoScale, geoScale, geoScale)
 function onXRFrame(t, frame) {
     const session = frame.session;
     session.requestAnimationFrame(onXRFrame);
@@ -155,3 +170,4 @@ button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:2re
     
 document.body.appendChild(button)
 document.getElementById('ArButton').addEventListener('click',x=>AR())
+
