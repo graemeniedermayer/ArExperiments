@@ -1,4 +1,4 @@
-### WARNING THIS IS SUPER SUSCEPTIBLE TO XXS ATTACKS.
+### WARNING THIS IS SUPER SUSCEPTIBLE TO XXS ATTACKS in its current implementation.
 
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
