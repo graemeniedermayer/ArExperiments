@@ -244,6 +244,7 @@ function onXRFrame(t, frame) {
 				
 				mesh.quaternion.copy(camera.quaternion)
 				mesh.position.copy(camera.position)
+	      			mesh.position.add(new THREE.Vector3(0,0,-0.4).applyQuaternion(camera.quaternion))
 				mesh.rotateZ(3*Math.PI/2)
 				// mesh.material.wireframe = true
 				scene.add( mesh );
