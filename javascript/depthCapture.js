@@ -199,7 +199,7 @@ function onXRFrame(t, frame) {
 
 				mesh.quaternion.copy(camera.quaternion)
 				mesh.position.copy(camera.position)
-				mesh.position.add(new THREE.Vector3(0,0,-0.3).applyQuaternion(camera.quaternion))
+				mesh.position.add(new THREE.Vector3(0,0,-1.3).applyQuaternion(camera.quaternion))
 				mesh.rotateZ(Math.PI/2)
 				scene.add( mesh );
 				// maybe?
