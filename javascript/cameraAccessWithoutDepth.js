@@ -226,7 +226,7 @@ function onXRFrame(t, frame) {
 
 				whratio = viewport.width/viewport.height
 				scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov/(2*360) )
-                const geometry = new THREE.PlaneGeometry(scaleGeo,  scaleGeo*whratio, depthData.width-1, depthData.height-1);
+                const geometry = new THREE.PlaneGeometry(scaleGeo,  scaleGeo*whratio, 1, 1);
 				const vertices = geometry.attributes.position.array;
 				
 				mesh = new THREE.Mesh( geometry, new THREE.ShaderMaterial() );
