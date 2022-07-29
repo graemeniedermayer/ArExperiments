@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AR</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style type="text/css">
+        @import url(https://fonts.googleapis.com/css?family=Quicksand);
+        body .dg.main .close-button {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="channelName" style="z-index:2;user-select:none;position:absolute;top:0px;width:7rem;height:1rem;">
+    <input type="button" id="channelSubmit" style="z-index:2;user-select:none;background:rgba(100,200,100,1);position:absolute;left:7.5rem;width:2rem;height:1rem;">
+
+    <script src="{% static 'reconnecting-websocket.min.js' %}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- orbital controls -->
+  <script src="{% static 'websocketListener.js' %}" >
+  </script>
+</body>
+</html>
