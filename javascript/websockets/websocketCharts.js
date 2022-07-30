@@ -124,7 +124,7 @@ document.getElementById('channelSubmit').addEventListener('click',e=>{
 	let channelName = document.getElementById('channelName')
 	document.getElementById('channelSubmit').style.display = 'none'
 	channelName.style.display = 'none'
-	socket = new ReconnectingWebSocket(`wss://compute.weaves.ca/ws/arDesktop/${channelName.value}`, null ,{
+	socket = new ReconnectingWebSocket(`wss://yourServer.ca/ws/arDesktop/${channelName.value}`, null ,{
 	  timeoutInterval: 2000, 
 	  maxReconnectAttempts: 10, 
 	  binaryType: 'arraybuffer'
