@@ -16,7 +16,7 @@ This is a companion repo to the youtube channel https://www.youtube.com/channel/
 
 [AR Occlusion](https://graemeniedermayer.github.io/ArExperiments/html/depthOcclusion.html) 
 
-[Camera Access](https://graemeniedermayer.github.io/ArExperiments/html/depthOcclusion.html) 
+[Camera Access](https://graemeniedermayer.github.io/ArExperiments/html/cameraAccess.html) 
 
 [Mesh Capture with Depth api](https://graemeniedermayer.github.io/ArExperiments/html/depthMesh.html) 
 
