@@ -1,25 +1,14 @@
-let scene, uniforms, renderer, light, camera, camBinding, gl, texture1, shaderMaterial, scaleGeo, whratio, glBinding, dcamera, shaderProgram; 
+let scene, uniforms, renderer, camera, camBinding, gl, texture1, shaderMaterial, scaleGeo, whratio, glBinding, dcamera, shaderProgram; 
       // XR globals.
       let xrButton = null;
       let xrRefSpace = null;
 let captureNext = false;
+let sigmoidFact = 2.0;
 let clock = new THREE.Clock()
-velMax = 0.25
+velMax = 0.5
 first = true
+distanceToCamera =-1.25
 let lastPos = new THREE.Vector3()
-const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
-let cartesianToSpherical = (x,y,z) => {
-    let r = Math.sqrt(x**2+y**2+z**2)
-    let theta = Math.atan2(y,x)
-    let phi = Math.acos(z/ r)
-    return [r, theta, phi]
-}
-let sphereToCartesian = ( r, theta, phi) => {
-	let x= r * Math.sin(phi)* Math.cos(theta)
-	let z= r * Math.sin(phi)* Math.sin(theta)
-	let y= r * Math.cos(phi)
-    return [x, y, z]
-}
 
 function getXRSessionInit( mode, options) {
   	if ( options && options.referenceSpaceType ) {
@@ -115,6 +104,18 @@ function AR(){
 }
 count = 0
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+let cartesianToSpherical = (x,y,z) => {
+    let r = Math.sqrt(x**2+y**2+z**2)
+    let theta = Math.atan2(y,x)
+    let phi = Math.acos(z/ r)
+    return [r, theta, phi]
+}
+let sphereToCartesian = ( r, theta, phi) => {
+	let x= r * Math.sin(phi)* Math.cos(theta)
+	let z= r * Math.sin(phi)* Math.sin(theta)
+	let y= r * Math.cos(phi)
+    return [x, y, z]
+}
 
 function onXRFrame(t, frame) {
     const session = frame.session;
@@ -130,6 +131,7 @@ function onXRFrame(t, frame) {
 			if (view.camera && first){
 				first = false
 				whratio = window.innerWidth / window.innerHeight
+				// check this?
 				scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov/(2*360) )
 				const geometry = new THREE.PlaneGeometry(scaleGeo*whratio,  scaleGeo, window.innerHeight,  window.innerWidth);
 				clock.start()
@@ -200,7 +202,3 @@ button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:2re
     
 document.body.appendChild(button)
 document.getElementById('ArButton').addEventListener('click',x=>AR())
-      
-let captureButton = document.getElementById('captureMesh').addEventListener('click',()=>{
-	captureNext = true;
-})
