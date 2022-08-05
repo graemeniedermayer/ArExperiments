@@ -10,9 +10,9 @@ This is a companion repo to the youtube channel https://www.youtube.com/channel/
 [All Demo](https://graemeniedermayer.github.io/ArExperiments/) 
 
 #### Select Demos
-[Photogrammetry](https://graemeniedermayer.github.io/ArExperiments/html/Photogrammetry.html)
+[Photogrammetry](https://graemeniedermayer.github.io/ArExperiments/html/arGrainElevator.html)
 
-[MagneticField](https://graemeniedermayer.github.io/ArExperiments/html/MagneticField.html) (requires chrome flag)
+[MagneticField](https://graemeniedermayer.github.io/ArExperiments/html/arMagneticField.html) (requires chrome flag)
 
 [AR Occlusion](https://graemeniedermayer.github.io/ArExperiments/html/depthOcclusion.html) 
 
