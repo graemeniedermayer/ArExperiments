@@ -255,7 +255,7 @@ if(window.Worker){
 	    }
 		expSize = 0.05
 		maxSize = Math.max(...newSizes)
-		newSizes = maxSize.map(x=> expSize*x/maxSize)
+		newSizes = newSizes.map(x=> expSize*x/maxSize)
 		animating = true
 		lockWorker = false
 	}
