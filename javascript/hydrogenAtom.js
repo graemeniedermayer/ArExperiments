@@ -106,6 +106,7 @@ function init() {
 		tex:   { value: texture }
 	};
 	var shaderMaterial = new THREE.ShaderMaterial( {
+        map: texture,
 		uniforms:       uniforms,
 		vertexShader:  document.getElementById( 'vertexshader' ).textContent,
 		fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
