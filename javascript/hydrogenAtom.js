@@ -251,7 +251,7 @@ if(window.Worker){
         	newColors[ i3 + 0 ] = red/255;
         	newColors[ i3 + 1 ] = green/255;
         	newColors[ i3 + 2 ] = blue/255;
-        	newSizes[ i ] = geoScale*r/2;
+        	newSizes[ i ] = geoScale*r*2;
 	    }
 		animating = true
 		lockWorker = false
