@@ -26,7 +26,7 @@ var positions, colors, sizes;
 var newPositions, newColors, newSizes;
 var attractor, light;
 var controls;
-let geoScale = 0.05
+let geoScale = 0.1
 var room = {}; // so that 'room.visible' can be set even if room isn't loaded yet
 
 init();
