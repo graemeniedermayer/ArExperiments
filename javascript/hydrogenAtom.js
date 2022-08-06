@@ -80,10 +80,7 @@ function init() {
 	newColors = new Float32Array( particles * 3 );
 	newSizes = new Float32Array( particles );
 	for ( var i = 0, i3 = 0; i < particles; i ++, i3 += 3) {
-        let xindex = i % 30
-        let yindex = ((i - xindex)/30)%30
-        let zindex = (i - xindex - 30*yindex)/900
-        let [x,y,z] = grid[xindex][yindex][zindex]
+        let [x,y,z] = grid[i]
 		r = 0.05
 		theta = 1
         let [red, green, blue] = hslToRgb(theta/(2*Math.PI), 0.8, 0.8)
