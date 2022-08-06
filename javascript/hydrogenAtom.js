@@ -72,7 +72,7 @@ function init() {
 	camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.001, 10 );
 	var material = new THREE.MeshBasicMaterial( { color: "rgb(100, 100, 250)"} );
 	// var particles = 20*10*150;
-	particles = 30*30*30;
+	particles = grid.length;
 	geometry = new THREE.BufferGeometry();
 	positions = new Float32Array( particles * 3 );
 	colors = new Float32Array( particles * 3 );
