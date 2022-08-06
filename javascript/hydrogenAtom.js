@@ -253,6 +253,9 @@ if(window.Worker){
         	newColors[ i3 + 2 ] = blue/255;
         	newSizes[ i ] = geoScale*r*2;
 	    }
+		expSize = 0.05
+		maxSize = Math.max(...newSizes)
+		newSizes = maxSize.map(x=> expSize*x/maxSize)
 		animating = true
 		lockWorker = false
 	}
