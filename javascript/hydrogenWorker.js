@@ -80,7 +80,7 @@ onmessage = function(e) {
         normalization = createNormalizationValue(n, l, a)
         let gridIn = []
         for(let i = 0; i<grid.length; i++){ 
-            let [x,y,z] = grid[i].map(x=>x/(4*n))
+            let [x,y,z] = grid[i].map(x=>x*(n))
             let [r, theta, phi] =  cartesianToSpherical(x, y, z)
         	r = isNaN(r)? 0 : r
         	theta = isNaN(theta)? 0 : theta
@@ -100,7 +100,7 @@ onmessage = function(e) {
         normalization = createNormalizationValue(n, l, a)
         let gridIn = []
         for(let i = 0; i<grid.length; i++){ 
-            let [x,y,z] = grid[i].map(x=>x/(4*n))
+            let [x,y,z] = grid[i].map(x=>x*(n))
             let [r, theta, phi] =  cartesianToSpherical(x, y, z)
         	r = isNaN(r)? 0 : r
         	theta = isNaN(theta)? 0 : theta
