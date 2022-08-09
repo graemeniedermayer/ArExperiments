@@ -39,16 +39,12 @@ let createHarmonicScaleValue = (m, l)=>{
     return math.evaluate( `sqrt((${2*l+1})/(${4*Math.PI})*(${l-m})!/(${l+m})!)`)
 }
 let createNormalizationValue = (n, l, a)=>{
-    console.log(`sqrt(${8/(n*a)**3}*(${n-l-1})!/(${2*n}*(${n+l})!))`)
-    console.log([n, l, m])
-    console.log(n-l-1)
     return math.evaluate(`sqrt(${8/(n*a)**3}*(${n-l-1})!/(${2*n}*(${n+l})!))`)
 }
 //sphericalHamonic
 let sH = (m, l, theta, phi)=>{
     legendre = math.evaluate(`(${legendrePoly})`, {x:Math.cos(theta)})
     phase = `e^(1i*${m}*${phi})` 
-    console.log(phase)
     return `${harmonicScale}*${phase}*${legendre}`
 }
 let waveFunc = (r, theta, phi, n, l, m)=>{//bohr radius
