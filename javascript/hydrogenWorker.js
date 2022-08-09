@@ -47,7 +47,7 @@ let createNormalizationValue = (n, l, a)=>{
 //sphericalHamonic
 let sH = (m, l, theta, phi)=>{
     legendre = math.evaluate(`(${legendrePoly})`, {x:Math.cos(theta)})
-    phase = `e^(i*${m}*${phi})` 
+    phase = `e^(1i*${m}*${phi})` 
     console.log(phase)
     return `${harmonicScale}*${phase}*${legendre}`
 }
