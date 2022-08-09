@@ -48,6 +48,7 @@ let createNormalizationValue = (n, l, a)=>{
 let sH = (m, l, theta, phi)=>{
     legendre = math.evaluate(`(${legendrePoly})`, {x:Math.cos(theta)})
     phase = `e^(i*${m}*${phi})` 
+    console.log(phase)
     return `${harmonicScale}*${phase}*${legendre}`
 }
 let waveFunc = (r, theta, phi, n, l, m)=>{//bohr radius
