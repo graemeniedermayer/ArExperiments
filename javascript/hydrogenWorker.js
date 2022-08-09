@@ -19,7 +19,7 @@ let normalization = 0
 let m = 0
 let l = 0
 let n = 1
-let a = 0.529*3//bohr radius 5e-11m 
+let a = 0.529*2//bohr radius 5e-11m 
 let createLegendreExpression = (m, l)=>{
     express = `(x^2 - 1 )^${l}`
     for(let k=0; k<l+m; k++){
@@ -77,7 +77,7 @@ onmessage = function(e) {
         normalization = createNormalizationValue(n, l, a)
         let gridIn = []
         for(let i = 0; i<grid.length; i++){ 
-            let [x,y,z] = grid[i].map(x=>x*(8*n))
+            let [x,y,z] = grid[i].map(x=>x*(4*n))
             let [r, theta, phi] =  cartesianToSpherical(x, y, z)
         	r = isNaN(r)? 0 : r
         	theta = isNaN(theta)? 0 : theta
@@ -97,7 +97,7 @@ onmessage = function(e) {
         normalization = createNormalizationValue(n, l, a)
         let gridIn = []
         for(let i = 0; i<grid.length; i++){ 
-            let [x,y,z] = grid[i].map(x=>x*(8*n))
+            let [x,y,z] = grid[i].map(x=>x*(4*n))
             let [r, theta, phi] =  cartesianToSpherical(x, y, z)
         	r = isNaN(r)? 0 : r
         	theta = isNaN(theta)? 0 : theta
