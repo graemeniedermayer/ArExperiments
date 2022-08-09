@@ -56,7 +56,7 @@ let waveFunc = (r, theta, phi, n, l, m)=>{//bohr radius
     let glp = math.evaluate( laguerrePoly, {x:rho})
     let shv = math.evaluate( sH(m, l, theta, phi) )//complex number...
     return math.evaluate(
-        `${normalization} * e^(${-rho/2}) * ${rho**l} * ${glp} * ${shv}`
+        `${normalization} * e^(${-rho/2}) * ${rho**l} * ${glp} * (${shv})`
     )
 }
 
