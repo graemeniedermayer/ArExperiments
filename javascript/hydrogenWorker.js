@@ -26,7 +26,7 @@ let createLegendreExpression = (m, l)=>{
         express = math.derivative(express,'x')
     }
     // is that the best way to handle factorial?
-    return `(-1)^${m}*(1-x^2)^(${m}/2)/(2^${l}*${l}!)*(${express})`
+    return `(-1)^${m}*((1-x^2)^(${m}/2))*(${express})/((2^${l})*${l}!)`
 }
 let createLaguerreExpression = (alpha, n)=>{
     express = `e^(-x)*x^(${n+alpha})`
@@ -36,7 +36,7 @@ let createLaguerreExpression = (alpha, n)=>{
     return `x^(-${alpha})*e^x/${n}!*(${express})`
 }
 let createHarmonicScaleValue = (m, l)=>{
-    return math.evaluate( `(-1)^${m}*sqrt((${2*l+1})/(${4*Math.PI})*(${l-m})!/(${l+m})!)`)
+    return math.evaluate( `sqrt((${2*l+1})/(${4*Math.PI})*(${l-m})!/(${l+m})!)`)
 }
 let createNormalizationValue = (n, l, a)=>{
     console.log(`sqrt(${8/(n*a)**3}*(${n-l-1})!/(${2*n}*(${n+l})!))`)
