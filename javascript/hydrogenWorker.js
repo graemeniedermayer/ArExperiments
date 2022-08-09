@@ -19,7 +19,7 @@ let normalization = 0
 let m = 0
 let l = 0
 let n = 1
-let a = 0.529*2//bohr radius 5e-11m 
+let a = 0.529*3//bohr radius 5e-11m 
 let createLegendreExpression = (m, l)=>{
     express = `(x^2 - 1 )^${l}`
     for(let k=0; k<l+m; k++){
