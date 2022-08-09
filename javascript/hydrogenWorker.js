@@ -36,7 +36,7 @@ let createLaguerreExpression = (alpha, n)=>{
     return `x^(-${alpha})*e^x/${n}!*(${express})`
 }
 let createHarmonicScaleValue = (m, l)=>{
-    return math.evaluate( `sqrt((${2*l+1})/(${4*Math.PI})*(${l-m})!/(${l+m})!)`)
+    return math.evaluate( `(-1)^${m}*sqrt((${2*l+1})/(${4*Math.PI})*(${l-m})!/(${l+m})!)`)
 }
 let createNormalizationValue = (n, l, a)=>{
     console.log(`sqrt(${8/(n*a)**3}*(${n-l-1})!/(${2*n}*(${n+l})!))`)
