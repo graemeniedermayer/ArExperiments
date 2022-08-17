@@ -1,5 +1,5 @@
 # Augmented Reality Experiments
-The goal is to have 52 mini augmented reality projects done by then end of 2022. Hopefully they can be used as a recipe book for larger projects.
+The goal is to have 52 mini augmented reality projects done by the end of 2022. Hopefully they can be used as a recipe book for larger projects.
 
 ### Youtube
 This is a companion repo to the youtube channel https://www.youtube.com/channel/UC_EkMqKOm7Ej_g03Ryv0UZw/videos
@@ -21,7 +21,7 @@ This is a companion repo to the youtube channel https://www.youtube.com/channel/
 [Mesh Capture with Depth api](https://graemeniedermayer.github.io/ArExperiments/html/depthMesh.html) 
 
 ## Setup
-The three tools used were predominately threejs, webxr, and django. Django was only used when a backend was necessary.
+The three tools used were predominately threejs, webxr, and django. Django was only used when a backend was necessary. Django channels was used for websocket and the projects that use websocket require a little extra backend work.
 
 ### Chrome
 These will only work on chromium derived browsers. Even then only chrome is particularly reliable.
