@@ -189,43 +189,55 @@ function onXRFrame(t, frame) {
             const viewport = baseLayer.getViewport(view);
             gl.viewport(viewport.x, viewport.y,
                         viewport.width, viewport.height);
-// recieve origin?
-            // socket.send(
-            //     JSON.stringify({
-            //         'type': 'fromMobile',
-            //         'quaternion': camera.quaternion.toArray(),
-            //         'position': camera.position.toArray(),
-			// 		'time': clock.getDelta()
-            //     }))
-			
             if(getOrigin){
-			    const results = frame.getImageTrackingResults();
-			    for (const result of results) {
-			      // The result's index is the image's position in the trackedImages array specified at session creation
-			      const imageIndex = result.index;
-                
-			      // Get the pose of the image relative to a reference space.
-			      const pose1 = frame.getPose(result.imageSpace, xrRefSpace);
-			      pos = pose1.transform.position
-			      quat = pose1.transform.orientation
+		const results = frame.getImageTrackingResults();
+		for (const result of results) {
 
-			      origin.position.copy( pos.toJSON())
-			      origin.quaternion.copy(quat.toJSON())
-                  scene.position.copy(pos.toJSON())
-			      scene.quaternion.copy(quat.toJSON())
+			const state = result.trackingState;
+                  	if (state == "tracked") {
+					// The result's index is the image's position in the trackedImages array specified at session creation
+					const imageIndex = result.index;
+				  
+					// Get the pose of the image relative to a reference space.
+					const pose1 = frame.getPose(result.imageSpace, xrRefSpace);
+					pos = pose1.transform.position
+					quat = pose1.transform.orientation
+  
+					firstPos.copy(pos.toJSON())
+					firstQuat.copy(quat.toJSON()).multiply(quat270x)
+					createAxes(firstPos, firstQuat)
+					try{
+					  secondPos.copy(phones[0].position)
+					  secondQuat.copy(phones[0].quaternion)
+					  createAxes(secondPos, secondQuat)
+					  thirdQuat = firstQuat.clone().multiply(secondQuat.clone().inverse())
+					  thirdPos = firstPos.clone().sub(secondPos.clone().applyQuaternion(thirdQuat) )
+  
+					  scene.position.copy( thirdPos)
+					  scene.quaternion.copy( thirdQuat)
 
-			      const state = result.trackingState;
-                  getOrigin = false
-
-			      if (state == "tracked") {
+					  origin.position.copy( thirdPos)
+					  origin.quaternion.copy( thirdQuat)
+					}catch(e){
+  
+					}
+					getOrigin = false
 			    	// HighlightImage(imageIndex, pose1);
-			      } else if (state == "emulated") {
+			} else if (state == "emulated") {
 			    	// FadeImage(imageIndex, pose1);
-			      }
-                }
 			}
-
-
+                }
+	    }else{
+				socket.send(
+					JSON.stringify({
+						'type': 'fromMobile',
+						'index': myIndex,
+						'quaternion': camera.quaternion.clone().multiply(thirdQuat.clone().inverse()).toArray(),
+						'position': camera.position.clone().sub(thirdPos).toArray(),
+						'time': clock.getDelta()
+					})
+				)
+	    }
         }
     }
 
@@ -249,4 +261,8 @@ button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:2re
     
 document.body.appendChild(button)
 document.getElementById('ArButton').addEventListener('click',x=>AR())
+
+document.getElementById('resetOrigin').addEventListener('click',x=>{
+    getOrigin = true
+})
 
