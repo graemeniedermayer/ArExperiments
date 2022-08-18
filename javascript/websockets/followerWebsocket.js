@@ -7,6 +7,8 @@ let  desktopCube, socket;
 
 //   each frame send to socket.
 
+let quat90x = new THREE.Quaternion().setFromEuler(new THREE.Euler( Math.PI/2, 0, 0, 'XYZ' ))
+
 let clock = new THREE.Clock()
 
 // standard webxr scene
@@ -18,6 +20,14 @@ function xwwwform(jsonObject){
 let camera, scene, renderer, xrRefSpace, gl;
 
 scene = new THREE.Scene();
+
+let createAxes = (origin,directionQuat) => {
+	let group = new THREE.Object3D()
+	group.position.copy(origin)
+	group.quaternion.copy(directionQuat)
+	group.add(new THREE.AxesHelper())
+	scene.add(group)
+}
 
 let geometry = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
 let material = new THREE.MeshStandardMaterial( {color: 0x00ff00} );
