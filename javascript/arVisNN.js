@@ -1,33 +1,30 @@
-const img  = document.getElementById('bitmap');
-// Ensure the image is loaded and ready for use
-
-let play = false
 
 // set of images
 
 // 
 
-let weights = [];
-let liveWeights;
-
-createCanvas = (weights, height, width) => {
-	// width height
-	let canv = new Canvas()
-	let imgData = new ImageData(weights)
-	imgData
-	return canv
-}
-
-for(let i=0; i < weights.length; i++){
-	let weight = weights[i]
-	if(weight.type =='conv'){
-
-	}else if(weight.type='dense'){
-
-	}
-	
-	// add 
-}
+let layerNames = [
+	'Input Image 224x224x3',
+	'conv1', //(4 stride)
+	'Relu',
+	'maxPool1 (3x3 kernel + 2 stride)',
+	'conv2',// (2 pad)
+	'Relu',
+	'maxPool2 (3x3 kernel + 2 stride)',
+	'conv3',// (1 pad)
+	'Relu',
+	'conv4',// (1 pad)
+	'Relu',
+	'conv5',// (1 pad)
+	'Relu',
+	'maxPool3 (3x3 kernel + 2 stride)',
+	'Flatten',
+	'fc6',//
+	'Relu+Dropout(p=0.5)',
+	'fc7',//
+	'Relu+Dropout(p=0.5)',
+	'fc8'//
+];
 
 // evaluate weights?
 
@@ -35,11 +32,9 @@ let clock = new THREE.Clock()
 
 // standard webxr scene
 
-
 let camera, scene, renderer, xrRefSpace, gl;
 
 scene = new THREE.Scene();
-
 
 var ambient = new THREE.AmbientLight( 0x222222 );
 scene.add( ambient );
@@ -59,6 +54,81 @@ renderer.setSize(window.innerWidth, window.innerHeight );
 camera.updateProjectionMatrix();
 document.body.appendChild( renderer.domElement );	
 renderer.xr.enabled = true;
+
+let liveWeights;
+let loader = new THREE.TextureLoader()
+let planeObj = {}
+let texture
+loadWeights = (name, position)=>{
+	let weightTexture = loader.load('/static/eave/data/alexNet/'+name+'.png', 
+		(weightTexture)=>{
+			let height = weightTexture.image.height
+			let width = weightTexture.image.width
+			let planeGeo =  new THREE.PlaneBufferGeometry( width/1000, height/1000, 1, 1 );
+			let planeMat= new THREE.MeshBasicMaterial({map: weightTexture, side: THREE.DoubleSide});
+			if(name.includes('conv')){
+				planeMat = new THREE.MeshBasicMaterial({
+					map: weightTexture, 
+					uniforms : {
+						tex:   { value: texture }
+					},
+					// alphaMap: weightTexture, 
+					// vertexShader:  document.getElementById( 'vertexshader' ).textContent,
+					fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+					side: THREE.DoubleSide,
+					depthTest:   true,
+					transparent:   true,
+					depthWrite: true,
+				});
+			}else{
+				planeMat = new THREE.MeshBasicMaterial({map: weightTexture, side: THREE.DoubleSide});
+			}
+			plane = new THREE.Mesh( planeGeo, planeMat );
+			planeGeo.attributes.position.needsUpdate = true;
+			plane.material.map.magFilter = THREE.NearestFilter;
+			plane.material.map.needsUpdate = true;
+			plane.position.copy(position)
+			planeObj[name] = plane
+			scene.add(plane)
+		}
+	)
+}
+
+textPanel = (text, position) =>{
+	return new TextCanvas({
+		string: text,
+		fontsize: 300,
+		loc1:[position.x,
+			  position.y,
+			  position.z],
+		loc2:[0.1,0.1,0.1],
+		geotype: {'canvasDepth':0.0, 'canvasHeight':0.25, 'scaleCanvas':0.1}
+	})
+}
+
+zDistanceStep = -0.1
+zPosition = -0.5
+for(let i=0; i < layerNames.length; i++){
+	let name = layerNames[i]
+	if(name.includes('conv')|| name.includes('fc') ){
+		loadWeights(name, new THREE.Vector3(0, 0, zPosition))
+		loadWeights(name + 'Bias', new THREE.Vector3(0, 0.5, zPosition+0.005))
+		let canvas = textPanel(name, new THREE.Vector3(1, 0, zPosition+0.01))
+		canvas.update()
+		scene.add(canvas.plane)
+	}else if(name.includes('fc') ){
+		let canvas = textPanel(name, new THREE.Vector3(0, 0, zPosition))
+		canvas.update()
+		scene.add(canvas.plane)
+	}
+	if(name.includes('fc')){
+		zPosition += zDistanceStep
+	}else{
+		zPosition += zDistanceStep
+	}
+	// add 
+}
+
 
 function init() {
 	window.addEventListener( 'resize', onWindowResize, false );
@@ -114,13 +184,7 @@ function AR(){
 	if ( currentSession === null ) {
 		
         let options = {
-            requiredFeatures: ['dom-overlay','image-tracking'],
-            trackedImages: [
-              {
-                image: imgBitmap,
-                widthInMeters: 0.05
-              }
-            ],
+            requiredFeatures: ['dom-overlay'],
             domOverlay: { root: document.body }
         };
 		var sessionInit = getXRSessionInit( 'immersive-ar', {
@@ -158,24 +222,6 @@ function onXRFrame(t, frame) {
             const viewport = baseLayer.getViewport(view);
             gl.viewport(viewport.x, viewport.y,
                         viewport.width, viewport.height);
-
-			const results = frame.getImageTrackingResults();
-			for (const result of results) {
-			  // The result's index is the image's position in the trackedImages array specified at session creation
-			  const imageIndex = result.index;
-			
-			  // Get the pose of the image relative to a reference space.
-			  const pose1 = frame.getPose(result.imageSpace, xrRefSpace);
-			  pos = pose1.transform.position
-			  quat = pose1.transform.orientation
-
-			  group.position.copy( pos.toJSON())
-			  group.quaternion.copy(quat.toJSON())
-			  const state = result.trackingState;
-			
-			}
-
-
         }
     }
 
@@ -188,8 +234,6 @@ function onWindowResize() {
 }
 render()
 function render() {
-	var delta = clock.getDelta();
-	if ( mixer ) mixer.update( delta );
 	renderer.render( scene, camera );
 }
 
@@ -201,4 +245,5 @@ button.style.cssText+= `position: absolute;top:80%;left:40%;width:20%;height:2re
     
 document.body.appendChild(button)
 document.getElementById('ArButton').addEventListener('click',x=>AR())
+
 
