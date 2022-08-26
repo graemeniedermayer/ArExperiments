@@ -60,7 +60,7 @@ let loader = new THREE.TextureLoader()
 let planeObj = {}
 let texture
 loadWeights = (name, position)=>{
-	let weightTexture = loader.load('/static/eave/data/alexNet/'+name+'.png', 
+	let weightTexture = loader.load('static/Folder/'+name+'.png', 
 		(weightTexture)=>{
 			let height = weightTexture.image.height
 			let width = weightTexture.image.width
