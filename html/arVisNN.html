@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+	<head>
+		<title>AR</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<style type="text/css">
+			@import url(https://fonts.googleapis.com/css?family=Quicksand);
+			body .dg.main .close-button {
+				background-color: rgba(0, 0, 0, 0.5);
+			}
+
+			body {
+				background-color: black;
+			}
+		</style>
+	</head>
+  <body>
+	<script type="x-shader/x-vertex" id="vertexShader">
+		void main() {
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragmentShader">
+		uniform vec3 color;
+		uniform sampler2D tex;
+		varying vec3 vColor;
+		void main() {
+			gl_FragColor = gl_FragColor * texture2D( tex, gl_PointCoord );
+			if ( gl_FragColor.a < 0.01 ) discard;
+		}
+	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+	<script src="./javascript/text3d.js"></script>
+	<script src='./javascript/visNN.js'></script>
+  </body>
+</html>
