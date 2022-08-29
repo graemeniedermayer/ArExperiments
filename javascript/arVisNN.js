@@ -19,9 +19,9 @@ let layerNames = [
 	'Relu',
 	'maxPool3 (3x3 kernel + 2 stride)',
 	'Flatten',
-	'fc6',//
+	'fc6smaller',//
 	'Relu+Dropout(p=0.5)',
-	'fc7',//
+	'fc7smaller',//
 	'Relu+Dropout(p=0.5)',
 	'fc8'//
 ];
@@ -60,7 +60,7 @@ let loader = new THREE.TextureLoader()
 let planeObj = {}
 let texture
 loadWeights = (name, position)=>{
-	let weightTexture = loader.load('static/Folder/'+name+'.png', 
+	let weightTexture = loader.load('./data/alexnet/'+name+'.png', 
 		(weightTexture)=>{
 			let height = weightTexture.image.height
 			let width = weightTexture.image.width
