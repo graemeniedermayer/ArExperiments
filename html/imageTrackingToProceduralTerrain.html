@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AR</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style type="text/css">
+        @import url(https://fonts.googleapis.com/css?family=Quicksand);
+        body .dg.main .close-button {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+	<script type="x-shader/x-vertex" id="vertexshader">
+		attribute float size;
+		attribute vec3 customColor;
+		varying vec3 vColor;
+		void main() {
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			vColor = customColor;
+			gl_Position = projectionMatrix * mvPosition;
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragmentshader">
+		uniform vec3 color;
+		uniform sampler2D texture;
+		varying vec3 vColor;
+		void main() {
+			gl_FragColor = vec4( color * vColor, 1.0 );
+		}
+	</script>
+    <script >
+        navigator.serviceWorker.register('/sw.js')
+        .then(function(reg){
+        })
+        .catch(function(error) {
+                   console.error('Service Worker Error', error);
+        })
+    </script>
+<!--  These image files need to be recreated.  -->
+<img id='clay1' style='display:none;' src = "clay1Edit.jpg">
+<img id='clay2' style='display:none;' src = "clay2Edit.jpg">
+<img id='sheep1' style='display:none;' src = "sheep1Edit.jpg">
+<img id='sheep2' style='display:none;' src = "sheep2Edit.jpg">
+<img id='desert1' style='display:none;' src = "desert1Edit.jpg">
+<img id='forest1' style='display:none;' src = "forest1Edit.jpg">
+<img id='forest2' style='display:none;' src = "forest2Edit.jpg">
+<img id='prarie1' style='display:none;' src = "praire1Edit.jpg">
+<img id='prarie2' style='display:none;' src = "praire2Edit.jpg">
+<img id='mountain1' style='display:none;' src = "mountain1Edit.jpg">
+<img id='mountain2' style='display:none;' src = "mountain2Edit.jpg">
+<img id='mountain3' style='display:none;' src = "mountain3Edit.jpg">
+<div id="GameButton" style="background:rgba(100,100,200,1);position:absolute;bottom:0px;width:10rem;height:3rem;">CalcPlane</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="text3d.js"></script>
+  <script defer src="imageTrackingToProceduralTerrain.js" >
+  </script>
+</body>
+</html>
