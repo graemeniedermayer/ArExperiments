@@ -1,4 +1,3 @@
-// check that image tracking works
 rot = new THREE.Quaternion().setFromEuler(new THREE.Euler( Math.PI/2, 0, 0, 'XYZ' ))
 
 let camera, scene, renderer, xrRefSpace, gl, terrains;
@@ -9,8 +8,6 @@ let resolution = 400
 const geometry = new THREE.PlaneGeometry(planeSize, planeSize, resolution-1, resolution-1);
 let meshPlane;
 
-
-// Check if it works..
 fileSuffix = 'Edit.jpg'
 let isInScene = {}
 fileNames = [
@@ -56,7 +53,6 @@ for(let i=0; i<resolution; i++){
 	}
 }
 let ctx = canvas.getContext('2d');
-// ctx.imageSmoothingEnabled = false;
 imgData = ctx.createImageData(resolution, resolution);
 
 textPanel = (text, position) =>{
@@ -79,7 +75,7 @@ let bitMaps = fileNames.map(x=>{
         widthInMeters: 0.05
     }
 })
-// wait for the images?
+// wait for the images
 var imgs = document.images,
     len = imgs.length,
     counter = 0;
@@ -108,11 +104,6 @@ let play = false
 let clock = new THREE.Clock()
 
 // standard webxr scene
-
-function xwwwform(jsonObject){
-	return Object.keys(jsonObject).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(jsonObject[key])).join('&');
-}
-
 
 var ambient = new THREE.AmbientLight( 0x222222 );
 scene.add( ambient );
@@ -371,7 +362,6 @@ let biomeParameters =[
 
 
 let noiseXY = (x,y, [octaves, persistence, lacunarity, scale, exponentiation, height])=>{
-	// scale could be an issue with lerping
 	const xs = x / scale;
 	const ys = y / scale;
 	// simplex
@@ -392,7 +382,6 @@ let noiseXY = (x,y, [octaves, persistence, lacunarity, scale, exponentiation, he
 	return Math.pow(
 		total, exponentiation) * height;
 }
-
 
 let calcWeightArray = (activePoints)=>{
 	let weightGrid = []
@@ -454,7 +443,6 @@ let calcParamArray = (weightGrid)=>{
 
 let calcColorArray = (weightGrid)=>{
 	let colorGrid = []
-	// introduce 2d noise mixing here?
 	let noise2d = 1
 	for(let pointIndex in grid){
 		let color = [0,0,0]
@@ -524,5 +512,3 @@ document.getElementById('GameButton').addEventListener('click', x => {
 	// build heightMap
 	buildTerrain(paramArray, textureArray)
 })
-
-// ocean beach outline...
