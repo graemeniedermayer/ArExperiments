@@ -240,6 +240,19 @@ function AR(){
 		button.textContent = 'ENTER AR' ;
 		currentSession = null;
 	}
+	function onSessionCatch(error){
+		let errorEle = document.getElementById('errorMessage')
+		if(!errorEle){
+			errorEle = document.createElement( 'div' );
+			errorEle.id = 'errorMessage'
+			errorEle.innerHTML = error.message ;
+			errorEle.style.cssText+= `position: absolute;top:1rem;left:1rem;width:auto;height:auto;background:black;color:white;`;
+			document.body.appendChild(errorEle)
+		}else{
+			errorEle.innerHTML += '<br>'+ error.message ;
+		}
+		console.error(error)
+	}
 	if ( currentSession === null ) {
 
         let options = {
@@ -255,7 +268,7 @@ function AR(){
 			referenceSpaceType: 'local', // 'local-floor'
 			sessionInit: options
 		});
-		navigator.xr.requestSession( 'immersive-ar', sessionInit ).then( onSessionStarted );
+		navigator.xr.requestSession( 'immersive-ar', sessionInit ).then( onSessionStarted ).catch(onSessionCatch);
 	} else {
 		currentSession.end();
 	}
