@@ -6,8 +6,10 @@ let guiSystem2 = gui.addFolder('system2');
 let guiSystem3 = gui.addFolder('system3');
 
 const _VS = `
+#define PI 3.1415926538
 uniform float pointMultiplier;
 uniform vec3 camDirection;
+uniform vec4 camQuat;
 
 attribute float size;
 attribute float angle;
@@ -17,23 +19,34 @@ attribute vec3 direction;
 
 varying vec4 vColour;
 varying vec2 vAngle;
+varying mat2 transform2d;
 varying float vBlend;
 
+float atan2(in float y, in float x) {
+    bool s = (abs(x) > abs(y));
+    return mix(PI/2.0 - atan(x,y), atan(y,x), s);
+}
+
 void main() {
-  vec3 along = normalize(cross(camDirection, direction));
-  vec3 normal = normalize(cross(direction, along));
-  mat4 transform = mat4(vec4(direction, 0.0), vec4(normal, 0.0), vec4(along, 0.0), vec4(0.0, 0.0, 0.0, 1.0));
+  vec3 u = camQuat.xyz;
+  float w = camQuat.w;
+  vec3 direct = 2.0 * dot(u, direction) * u + (w*w - dot(u, u)) * direction + 2.0 * w * cross(u, direction);
+  vec3 along = normalize(cross(camDirection, direct));
+  transform2d = mat2(along.xy, direct.xy);
+  float directAngle = atan2(direction.y, direction.x);
   
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 
-  gl_Position = transform*projectionMatrix * mvPosition;
+  gl_Position = projectionMatrix * mvPosition;
   gl_PointSize = 0.1*size * pointMultiplier / (gl_Position.w*gl_Position.w);
 
-  vAngle = vec2(cos(angle), sin(angle));
+  vAngle = vec2(cos(angle+directAngle), sin(angle+directAngle));
   vColour = colour;
   vBlend = blend;
 }`;
+// mat2(along.xy, direct.xy);
 
+// transform2d = mat2(2.0, 0.0, 0.0, 2.0);
 const _FS = `
 
 uniform sampler2D diffuseTexture;
@@ -41,9 +54,10 @@ uniform sampler2D diffuseTexture;
 varying vec4 vColour;
 varying vec2 vAngle;
 varying float vBlend;
+varying mat2 transform2d;
 
 void main() {
-  vec2 coords = (gl_PointCoord - 0.5) * mat2(vAngle.x, vAngle.y, -vAngle.y, vAngle.x) + 0.5;
+  vec2 coords = ( ((gl_PointCoord - 0.5) * mat2(vAngle.x, vAngle.y, -vAngle.y, vAngle.x))  + 0.5);
   float coordLength = length(gl_PointCoord - 0.5);
   float fallOff = 1.0 - 2.0*coordLength;
   gl_FragColor = texture2D(diffuseTexture, coords) * vColour;
@@ -107,7 +121,7 @@ class DirectionalEmitter {
     this.particles_ = [];
     this.emitterLife_ = null;
     this.delay_ = 0.0;
-    this.rotationSpeed = 0.5;
+    this.rotationSpeed = 0;
     this.lifeTime = 5.0;
     this.speed = 10.0
   }
@@ -151,21 +165,21 @@ class DirectionalEmitter {
       this.particles_.push(this.CreateParticle_(p));
     }
   }
-  CreateParticle_(p=zero) {
+  CreateParticle_(p=zero, n=0) {
     const life = (Math.random() * 0.75 + 0.25) * this.lifeTime;
     const speed = this.speed
     return {
         position: new THREE.Vector3(
-            (Math.random() * 2 - 1) * .04 + -.44,
-            (Math.random() * 2 - 1) * .04 + 0,
-            (Math.random() * 2 - 1) * .04 + .12).add(p),
-        direction: new THREE.Vector3(1, 0, 0),
+            (Math.random() * 2 - 1) * .2 + -.44,
+            (Math.random() * 2 - 1) * .2 + 0,
+            (Math.random() * 2 - 1) * .2 + .12).add(p),
+        direction: (new THREE.Vector3(0.5, 0.5, 0)).add(new THREE.Vector3(0,0.04*n,0)),
         size: (Math.random() * 0.5 + 0.5) * 2.0,
         colour: new THREE.Color(),
         alpha: 0.0,
         life: life,
         maxLife: life,
-        rotation: Math.random() * 2.0 * Math.PI,
+        rotation: 0,
         velocity: new THREE.Vector3(0, 0, 0),
         blend: 0.1,
         drag: 1.0,
@@ -204,7 +218,7 @@ class DirectionalEmitter {
       this.emissionAccumulator_ -= n / this.emissionRate_;
   
       for (let i = 0; i < n; i++) {
-        const p = this.CreateParticle_(this.offset);
+        const p = this.CreateParticle_(this.offset,this.particles_.length);
         this.particles_.push(p);
       }
     }
@@ -220,9 +234,12 @@ class ParticleSystem {
         },
         pointMultiplier: {
             value: window.innerHeight / (2.0 * Math.tan(0.5 * 60.0 * Math.PI / 180.0))
-        }
+        },
         camDirection:{
-            value: (new Vector3(0,0,-1)).applyQuaternion(camera.quaternion)
+            value: (new THREE.Vector3(0,0,-1)).applyQuaternion(camera.quaternion).toArray()
+        },
+        camQuat:{
+            value: camera.quaternion.toArray()
         }
     };
 
@@ -289,7 +306,7 @@ class ParticleSystem {
       directions.push(p.direction.x, p.direction.y, p.direction.z);
       colours.push(p.colour.r, p.colour.g, p.colour.b, p.alpha);
       sizes.push(p.currentSize);
-      angles.push(p.rotation+tilt);
+      angles.push(tilt);
       blends.push(p.blend);
 
       box.expandByPoint(p.position);
@@ -315,7 +332,8 @@ class ParticleSystem {
     this.geometry_.boundingBox = box;
     this.geometry_.boundingSphere = new THREE.Sphere();
 
-    this.material_.uniforms.camDirection.value = (new Vector3(0,0,-1)).applyQuaternion(camera.quaternion)
+    this.material_.uniforms.camDirection.value = (new THREE.Vector3(0,0,-1)).applyQuaternion(camera.quaternion).toArray()
+    this.material_.uniforms.camQuat.value = camera.quaternion.toArray()
     box.getBoundingSphere(this.geometry_.boundingSphere);
   }
 
@@ -393,46 +411,32 @@ scene.add(group2)
 
 scene.add(group1)
 let textureNames = [
-  'colorFlames',
-  'energy',
-  'energyParticles',
+  'bubbles',
+  'Energy',
   'flames',
-  'flamesblue',
-  'flamesSmoke',
-  'flowerOutlines',
-  'flowers',
+  'flowersBeam',
   'frost',
-  'largeMetal',
-  'lightning',
-  'moond',
-  'redParticles',
-  'sparks',
-  'stars',
-  'strings',
-  'sunFlower',
-  'peddles',
-  'purpleFlower'
-  
+  'water'
 ]
 
-initTexture1 =  'purpleFlower'
-initTexture2 ='stars'
-initTexture3 = 'peddles'
+initTexture1 =  'flowersBeam'
+initTexture2 ='flames'
+initTexture3 = 'Energy'
 
 let partSystem3 = new ParticleSystem({
   camera: camera,
   parent: group3,
-  texture: "/static/eave/experiment/particles/"+initTexture3+'.png',
+  texture: "/static/eave/experiment/beams/"+initTexture3+'.png',
 });
 let partSystem1 = new ParticleSystem({
   camera: camera,
   parent: group1,
-  texture: "/static/eave/experiment/particles/"+ initTexture1+'.png',
+  texture: "/static/eave/experiment/beams/"+ initTexture1+'.png',
 });
 let partSystem2 = new ParticleSystem({
   camera: camera,
   parent: group2,
-  texture: "/static/eave/experiment/particles/"+initTexture2 +'.png',
+  texture: "/static/eave/experiment/beams/"+initTexture2 +'.png',
 });
 
 let setEmitter = (emitter) =>{
@@ -474,7 +478,7 @@ guiWrap = (emitter, particleSystem, guiSystem, textureName)=>{
       blend:1.0,
       speed:10.0,
       lifetime:5.0,
-      rotationSpeed:0.5,
+      rotationSpeed:0.0,
       texture:textureName
   }
   let emitterChange = () =>{
@@ -502,7 +506,7 @@ guiWrap = (emitter, particleSystem, guiSystem, textureName)=>{
   let textureChange = ()=>{
     let thisPart = particleSystem
     // really should dispose materials but they should be small
-    glob = new THREE.TextureLoader().load('/static/eave/experiment/particles/'+params.texture+'.png', texture=>{
+    glob = new THREE.TextureLoader().load('/static/eave/experiment/beams/'+params.texture+'.png', texture=>{
       
       thisPart.material_.uniforms.diffuseTexture.value.image = texture.image
       thisPart.material_.uniforms.diffuseTexture.value.needsUpdate=true
