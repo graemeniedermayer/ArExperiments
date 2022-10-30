@@ -28,11 +28,6 @@ float atan2(in float y, in float x) {
 }
 
 void main() {
-  vec3 u = camQuat.xyz;
-  float w = camQuat.w;
-  vec3 direct = 2.0 * dot(u, direction) * u + (w*w - dot(u, u)) * direction + 2.0 * w * cross(u, direction);
-  vec3 along = normalize(cross(camDirection, direct));
-  transform2d = mat2(along.xy, direct.xy);
   float directAngle = atan2(direction.y, direction.x);
   
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
@@ -40,12 +35,15 @@ void main() {
   gl_Position = projectionMatrix * mvPosition;
   gl_PointSize = 0.1*size * pointMultiplier / (gl_Position.w*gl_Position.w);
 
-  vAngle = vec2(cos(angle+directAngle), sin(angle+directAngle));
+  vAngle = vec2(cos(2.0*angle-directAngle), sin(2.0*angle-directAngle));
   vColour = colour;
   vBlend = blend;
 }`;
 // mat2(along.xy, direct.xy);
-
+  // transform2d = mat2(along.xy, direct.xy);
+// vec3 direct = 2.0 * dot(u, direction) * u + (w*w - dot(u, u)) * direction + 2.0 * w * cross(u, direction);
+  // vec3 along = normalize(cross(camDirection, direct));
+  
 // transform2d = mat2(2.0, 0.0, 0.0, 2.0);
 const _FS = `
 
@@ -61,7 +59,7 @@ void main() {
   float coordLength = length(gl_PointCoord - 0.5);
   float fallOff = 1.0 - 2.0*coordLength;
   gl_FragColor = texture2D(diffuseTexture, coords) * vColour;
-  gl_FragColor.xyz *= gl_FragColor.w*fallOff;
+  gl_FragColor.xyz *= fallOff;
   gl_FragColor.w *= vBlend*fallOff;
 }`;
 
@@ -124,6 +122,7 @@ class DirectionalEmitter {
     this.rotationSpeed = 0;
     this.lifeTime = 5.0;
     this.speed = 10.0
+    this.count = 0.0;
   }
   OnDestroy() {
   }
@@ -165,15 +164,13 @@ class DirectionalEmitter {
       this.particles_.push(this.CreateParticle_(p));
     }
   }
-  CreateParticle_(p=zero, n=0) {
+  CreateParticle_(p=zero) {
     const life = (Math.random() * 0.75 + 0.25) * this.lifeTime;
     const speed = this.speed
+    this.count+=1
     return {
-        position: new THREE.Vector3(
-            (Math.random() * 2 - 1) * .2 + -.44,
-            (Math.random() * 2 - 1) * .2 + 0,
-            (Math.random() * 2 - 1) * .2 + .12).add(p),
-        direction: (new THREE.Vector3(0.5, 0.5, 0)).add(new THREE.Vector3(0,0.04*n,0)),
+        position:(new THREE.Vector3(0.5*Math.sin(this.count/20), 0.5*Math.cos(this.count/20), 0)),
+        direction: (new THREE.Vector3(Math.cos(this.count/20), -Math.sin(this.count/20), 0)),
         size: (Math.random() * 0.5 + 0.5) * 2.0,
         colour: new THREE.Color(),
         alpha: 0.0,
@@ -181,7 +178,7 @@ class DirectionalEmitter {
         maxLife: life,
         rotation: 0,
         velocity: new THREE.Vector3(0, 0, 0),
-        blend: 0.1,
+        blend: 0.2,
         drag: 1.0,
     };
   }
@@ -291,8 +288,9 @@ class ParticleSystem {
   UpdateGeometry_() {
 
 	let y = new THREE.Vector3(1,0,0).applyQuaternion(this.camera_.quaternion).y
-	let upsideDown = new THREE.Vector3(0,1,0).applyQuaternion(this.camera_.quaternion).y>0
-    let tilt = upsideDown ? Math.asin(y):-Math.asin(y)
+	let upsideDown = new THREE.Vector3(0,1,0).applyQuaternion(this.camera_.quaternion).y>0 ? 1:-1
+	let forwardsBack = new THREE.Vector3(0,0,1).applyQuaternion(this.camera_.quaternion).z>0 ? 1:0
+    let tilt = forwardsBack*upsideDown*Math.asin(y)
     const positions = [];
     const sizes = [];
     const colours = [];
@@ -302,8 +300,10 @@ class ParticleSystem {
 
     const box = new THREE.Box3();
     for (let p of this.particles_) {
+      // .inverse()
+      let direction = p.direction.clone().applyQuaternion(this.camera_.quaternion)
       positions.push(p.position.x, p.position.y, p.position.z);
-      directions.push(p.direction.x, p.direction.y, p.direction.z);
+      directions.push(direction.x, direction.y, direction.z);
       colours.push(p.colour.r, p.colour.g, p.colour.b, p.alpha);
       sizes.push(p.currentSize);
       angles.push(tilt);
@@ -426,17 +426,17 @@ initTexture3 = 'Energy'
 let partSystem3 = new ParticleSystem({
   camera: camera,
   parent: group3,
-  texture: "/static/eave/experiment/beams/"+initTexture3+'.png',
+  texture: "../data/beams/"+initTexture3+'.png',
 });
 let partSystem1 = new ParticleSystem({
   camera: camera,
   parent: group1,
-  texture: "/static/eave/experiment/beams/"+ initTexture1+'.png',
+  texture: "../data/beams/"+ initTexture1+'.png',
 });
 let partSystem2 = new ParticleSystem({
   camera: camera,
   parent: group2,
-  texture: "/static/eave/experiment/beams/"+initTexture2 +'.png',
+  texture: "../data/beams/"+initTexture2 +'.png',
 });
 
 let setEmitter = (emitter) =>{
@@ -506,7 +506,7 @@ guiWrap = (emitter, particleSystem, guiSystem, textureName)=>{
   let textureChange = ()=>{
     let thisPart = particleSystem
     // really should dispose materials but they should be small
-    glob = new THREE.TextureLoader().load('/static/eave/experiment/beams/'+params.texture+'.png', texture=>{
+    glob = new THREE.TextureLoader().load('../data/beams/'+params.texture+'.png', texture=>{
       
       thisPart.material_.uniforms.diffuseTexture.value.image = texture.image
       thisPart.material_.uniforms.diffuseTexture.value.needsUpdate=true
