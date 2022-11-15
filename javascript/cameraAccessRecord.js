@@ -24,6 +24,16 @@ getCanvas = () =>{
 	return canvas
 }
 let camCanvas = getCanvas()
+const date = new Date();
+
+let day = date.getDate();
+let month = date.getMonth() + 1;
+let year = date.getFullYear();
+let time = date.getTime();
+
+let currentDate = `${day}-${month}-${year}-${time}`;
+let fileString = ''
+let imageIndex = 0
 
 // function getBase64Image(img) {
 // 	var canvas = document.createElement("canvas");
@@ -253,6 +263,7 @@ function onXRFrame(t, frame) {
             gl.viewport(viewport.x, viewport.y,
                         viewport.width, viewport.height);
             if (view.camera  && captureNext) {
+				imageIndex += 1
 				captureNext = false
 				dcamera = view.camera
 				camBinding = glBinding.getCameraImage(dcamera);
@@ -263,17 +274,39 @@ function onXRFrame(t, frame) {
                 
 				ctxCamera = camCanvas.getContext('2d');
                 image1 = new ImageData(new Uint8ClampedArray(texture1), dcamera.width)
-                image = ctxCamera.putImageData( image1,0,0,0,0, dcamera.width, dcamera.height)
-               
+                
+				// ctxCamera.drawImage(image1, 0, 0);
+				image = ctxCamera.putImageData( image1,0,0,0,0, dcamera.width, dcamera.height)
+				ctxCamera.translate(0, dcamera.height);
+				ctxCamera.scale(1,-1);
+				// image = ctxCamera.putImageData( ,0,0,0,0, dcamera.width, dcamera.height)
+				// ctxCamera.translate(width, 0);
+				// ctxCamera.scale(-1, 1);
+				ctxCamera.drawImage(camCanvas, 0, 0);
+				// can we overwrite files?
+				fileString += `${camera.position.toArray()},${camera.quaternion.toArray()};`
+				var file = new Blob([fileString], {type : 'text/html'}); 
+				var a = document.createElement("a");
+                var url = URL.createObjectURL(file);
+        		a.href = url;
+        		a.download = `${currentDate}_${imageIndex}.txt`;
+        		document.body.appendChild(a);
+        		a.click();
+        		setTimeout(function() {
+        		    document.body.removeChild(a);
+        		    window.URL.revokeObjectURL(url);  
+        		}, 0); 
+
 				var dataURL = camCanvas.toDataURL("image/png");
 				var dataEle = document.createElement("a")
-    			dataEle.download = `${camera.position.toArray()}-${camera.quaternion.toArray()}.png`;
+    			dataEle.download = `${currentDate}_${imageIndex}.png`;
     			dataEle.href = dataURL;
     			dataEle.click();
     			setTimeout(function() {
     			    window.URL.revokeObjectURL(dataURL);  
     			}, 0); 
 				
+
 
             } else {
               console.log('unavailable')
