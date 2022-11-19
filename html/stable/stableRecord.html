@@ -1,0 +1,30 @@
+
+{% load static %}
+<!doctype html>
+<html>
+	<head>
+		<title>AR</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+		<style type="text/css">
+			@import url(https://fonts.googleapis.com/css?family=Quicksand);
+			body .dg li.title,
+			body .dg li:not(.folder),
+			body .dg.main .close-button {
+				background-color: rgba(0, 0, 0, 0.5);
+			}
+
+			body {
+				background-color: black;
+			}
+		</style>
+	</head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <div id="captureImage" style="background:rgba(100,100,200,1);user-select: none;position:absolute;bottom:0px;width:10rem;height:3rem;">Capture Image</div>
+    <div id="downloadImage" style="background:rgba(100,100,200,1);user-select: none;position:absolute;bottom:0px;right:0px;width:10rem;height:3rem;">Download</div>
+   
+    <script src="/thirdParty/whammy.js"></script>
+    <script src="../../javascript/stableRecording.js"></script>
+  </body>
+</html>
