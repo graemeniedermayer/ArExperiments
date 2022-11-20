@@ -12,6 +12,7 @@ let firstDepth = true
 let imageArray = []
 let canvasSize = {'width':512,'height':1024}
 let clock = new THREE.Clock()
+let imageIndex = 0
 
 const date = new Date();
 
@@ -36,6 +37,24 @@ var depthEncoder = new Whammy.Video(15);
 //   }
 // //   blobbing 
 // u8intToBlob = data => new Blob([data.buffer])
+
+getCanvas = () =>{
+	let canvas = document.createElement('canvas');
+  	canvas.width = 512;
+	canvas.height= 512;
+	let el = document.createElement('div');
+	// el.style.position
+	el.style.position= 'absolute';
+	el.style.top= '4000px';
+	el.appendChild(canvas)
+	document.body.appendChild(el)
+  	let ctx = canvas.getContext('2d');
+	ctx.fillStyle=  "#000000";
+	ctx.fillRect(0, 0, canvas.width, canvas.height );
+	return canvas
+}
+let camCanvas = getCanvas()
+let depthCanvas = getCanvas()
 
 function cloneCanvas(oldCanvas) {
 
@@ -80,19 +99,10 @@ function getXRSessionInit( mode, options) {
   	}
   	return newInit;
    }
-function init(){
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.001, 10 );
   // var particles = 20*10*150;
-  light = new THREE.PointLight( 0xffffff,1.5 );
-  light.decay = 1
-  light.distance = 30;
-  light.position.x = 0
-  light.position.y = 1.5
-  light.position.z = -1.2
-  scene.add(light)
-  var ambient = new THREE.AmbientLight( 0x222222 );
-  scene.add( ambient );
+
   renderer = new THREE.WebGLRenderer( { antialias: true } );
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
@@ -100,7 +110,6 @@ function init(){
   // renderer.gammaOutput = true;
   document.body.appendChild( renderer.domElement );
   window.addEventListener( 'resize', onWindowResize, false );
-}
 
 
 function AR(){
@@ -276,8 +285,6 @@ function onXRFrame(t, frame) {
     const baseLayer = session.renderState.baseLayer;
     const pose = frame.getViewerPose(xrRefSpace);
 	render()
-	light.position.z = -3 - 2*Math.sin(count)
-	count += 0.02
 	if (pose) {
 		for (const view of pose.views) {
             const viewport = baseLayer.getViewport(view);
@@ -286,6 +293,7 @@ function onXRFrame(t, frame) {
             const depthData = frame.getDepthInformation(view); 
             if (view.camera && depthData && captureNext) {
 
+				imageIndex += 1
 
 				// captureNext =false
 				dcamera = view.camera
@@ -293,10 +301,7 @@ function onXRFrame(t, frame) {
 				texture1 = drawCameraCaptureScene(gl, camBinding,  dcamera.width, dcamera.height)
 
 				let convRate = depthData.rawValueToMeters
-				camCanvas.height=dcamera.height
-                camCanvas.width = dcamera.width
 				// cutting
-                scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov*cutRatio/(2*360) )
 
 				ctxCamera = camCanvas.getContext('2d');
                 image1 = new ImageData(new Uint8ClampedArray(texture1), dcamera.width)
@@ -307,17 +312,50 @@ function onXRFrame(t, frame) {
                 if (hw > 2){
                     minSize = dcamera.height - 2*dcamera.width
                     cutRatio = 1-(minSize/dcamera.height)
+					// ctxCamera.translate(0, dcamera.height);
+					// ctxCamera.scale(1,-1);
                     image = ctxCamera.drawImage(camCanvas, 0, minSize/2, dcamera.width, dcamera.height-minSize, 0, 0, canvasSize.width, canvasSize.height)
                 }else{
                     minSize = dcamera.width - 2*dcamera.height
                     cutRatio = 1-(minSize/dcamera.width)
+					// ctxCamera.translate(0, dcamera.height);
+					// ctxCamera.scale(1,-1);
                     image = ctxCamera.drawImage(camCanvas, minSize/2, 0, dcamera.width-minSize, dcamera.height, 0, 0, canvasSize.height, canvasSize.width)
                 }
+				camCanvas.height= canvasSize.height
+                camCanvas.width =  canvasSize.width
 
 				ctxDepth = depthCanvas.getContext('2d');
-                image1 = new ImageData(new Uint8ClampedArray(depthData.data), depthData.width)
-                image = ctxDepth.putImageData( image1,0,0,0,0, depthData.width, parseInt(depthData.height*cutRatio))
+				depthCanvas.height= depthData.width
+                depthCanvas.width = parseInt(depthData.height*cutRatio)
                 
+				let data = new Uint8Array(depthData.data)
+
+				let whratio = 1/2
+                let skipIndex = 2*(parseInt(depthData.height*(1-cutRatio))/2 * depthData.width)
+                let scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov*cutRatio/(2*360) )
+                
+				depthArray = ctxDepth.createImageData(depthData.width, depthData.height);
+
+				// for ( let  j = skipIndex, k = 0, i = skipIndex, l = data.length-skipIndex; j < l; j+=2, k+=4) {
+				// 	depthArray.data[k]   = data[ i ]
+				//     depthArray.data[k+1] = data[ i+1 ] 
+				//     depthArray.data[k+2] = 0
+				//     depthArray.data[k+3] = 255; //alpha
+				// 	i+= 2
+				// }
+				for ( let  k = 0, i = 0, l = data.length; i < l; i+= 2, k+=4) {
+					depthArray.data[k]   = data[ i ]
+				    depthArray.data[k+1] = data[ i+1 ] 
+				    depthArray.data[k+2] = 150;
+				    depthArray.data[k+3] = 255; //alpha
+					
+				}
+
+				depthimage1 = new ImageData(depthArray.data, depthData.width)
+                // depthimage = ctxDepth.putImageData( image1,0,0,0,0, depthData.width, depthData.height*cutRatio))  
+                depthimage = ctxDepth.putImageData( depthimage1,0,0,0,0, depthData.width, depthData.height)              
+
 				encoder.add(cloneCanvas(camCanvas));
 				depthEncoder.add(cloneCanvas(depthCanvas));
 
@@ -333,6 +371,8 @@ function onXRFrame(t, frame) {
 						geometricScale: ${scaleGeo}
 					}`
 					firstDepth= false
+				}else{
+					fileString += `${camera.position.toArray()},${camera.quaternion.toArray()};`
 				}
 				// this is probably going to trigger chrome.....
 
@@ -364,7 +404,6 @@ function onWindowResize() {
 	camera.updateProjectionMatrix();
 	renderer.setSize( window.innerWidth, window.innerHeight );
 }
-init()
 render()
 function render() {
 	renderer.render( scene, camera );
@@ -385,6 +424,7 @@ let captureButton = document.getElementById('captureImage').addEventListener('cl
 })
 
 document.getElementById('downloadImage').addEventListener('click',()=>{
+	captureNext = false;
 	var file = new Blob([fileString], {type : 'text/html'}); 
 	var a = document.createElement("a");
     var url = URL.createObjectURL(file);
@@ -401,14 +441,14 @@ document.getElementById('downloadImage').addEventListener('click',()=>{
 		var url = (window.webkitURL || window.URL).createObjectURL(output);
 		var dataEle = document.createElement("a")
 		dataEle.download = `${currentDate}_${imageIndex}.webm`;
-    	dataEle.href = dataURL;
+    	dataEle.href = url;
     	dataEle.click();
-	});
-	depthEncoder.compile(false, function(output){
-		var url = (window.webkitURL || window.URL).createObjectURL(output);
-		var dataDepth = document.createElement("a")
-		dataDepth.download = `${currentDate}_${imageIndex}_depth.webm`;
-    	dataDepth.href = dataURL;
-    	dataDepth.click();
+		depthEncoder.compile(false, function(output){
+			var url = (window.webkitURL || window.URL).createObjectURL(output);
+			var dataDepth = document.createElement("a")
+			dataDepth.download = `${currentDate}_${imageIndex}_depth.webm`;
+			dataDepth.href = url;
+			dataDepth.click();
+		});
 	});
 })
