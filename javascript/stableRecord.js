@@ -1,5 +1,3 @@
-// capture depth + camera access + camera position/quaternon.
-
 
 let scene, uniforms, renderer, light, camera, camBinding;
 let gl, texture1, shaderMaterial, scaleGeo, whratio;
@@ -65,6 +63,10 @@ function cloneCanvas(oldCanvas) {
     //set dimensions
     newCanvas.width = oldCanvas.width;
     newCanvas.height = oldCanvas.height;
+
+	ctxCamera.translate(0, dcamera.height);
+	ctxCamera.scale(1,-1);
+	
 
     //apply the old canvas to the new one
     context.drawImage(oldCanvas, 0, 0);
@@ -304,46 +306,26 @@ function onXRFrame(t, frame) {
 				// cutting
 
 				ctxCamera = camCanvas.getContext('2d');
+				camCanvas.height= dcamera.height
+                camCanvas.width = dcamera.width
                 image1 = new ImageData(new Uint8ClampedArray(texture1), dcamera.width)
                 image = ctxCamera.putImageData( image1,0,0,0,0, dcamera.width, dcamera.height)
-                let hw = dcamera.height / dcamera.width
-                // TODO generalize
 				
-                if (hw > 2){
-                    minSize = dcamera.height - 2*dcamera.width
-                    cutRatio = 1-(minSize/dcamera.height)
-					// ctxCamera.translate(0, dcamera.height);
-					// ctxCamera.scale(1,-1);
-                    image = ctxCamera.drawImage(camCanvas, 0, minSize/2, dcamera.width, dcamera.height-minSize, 0, 0, canvasSize.width, canvasSize.height)
-                }else{
-                    minSize = dcamera.width - 2*dcamera.height
-                    cutRatio = 1-(minSize/dcamera.width)
-					// ctxCamera.translate(0, dcamera.height);
-					// ctxCamera.scale(1,-1);
-                    image = ctxCamera.drawImage(camCanvas, minSize/2, 0, dcamera.width-minSize, dcamera.height, 0, 0, canvasSize.height, canvasSize.width)
-                }
-				camCanvas.height= canvasSize.height
-                camCanvas.width =  canvasSize.width
+                let hw = dcamera.height / dcamera.width
 
 				ctxDepth = depthCanvas.getContext('2d');
-				depthCanvas.height= depthData.width
-                depthCanvas.width = parseInt(depthData.height*cutRatio)
-                
+				// deep questions
+				depthCanvas.height=depthData.height 
+                depthCanvas.width = depthData.width
+
+               
 				let data = new Uint8Array(depthData.data)
 
 				let whratio = 1/2
-                let skipIndex = 2*(parseInt(depthData.height*(1-cutRatio))/2 * depthData.width)
-                let scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov*cutRatio/(2*360) )
+                // let skipIndex = 2*(parseInt(depthData.height*(1-cutRatio))/2 * depthData.width)
+                let scaleGeo = 2*Math.tan( 2*Math.PI*camera.fov/(2*360) )
                 
 				depthArray = ctxDepth.createImageData(depthData.width, depthData.height);
-
-				// for ( let  j = skipIndex, k = 0, i = skipIndex, l = data.length-skipIndex; j < l; j+=2, k+=4) {
-				// 	depthArray.data[k]   = data[ i ]
-				//     depthArray.data[k+1] = data[ i+1 ] 
-				//     depthArray.data[k+2] = 0
-				//     depthArray.data[k+3] = 255; //alpha
-				// 	i+= 2
-				// }
 				for ( let  k = 0, i = 0, l = data.length; i < l; i+= 2, k+=4) {
 					depthArray.data[k]   = data[ i ]
 				    depthArray.data[k+1] = data[ i+1 ] 
@@ -352,21 +334,33 @@ function onXRFrame(t, frame) {
 					
 				}
 
-				depthimage1 = new ImageData(depthArray.data, depthData.width)
-                // depthimage = ctxDepth.putImageData( image1,0,0,0,0, depthData.width, depthData.height*cutRatio))  
-                depthimage = ctxDepth.putImageData( depthimage1,0,0,0,0, depthData.width, depthData.height)              
+				depthimage = ctxDepth.putImageData( depthArray,0,0,0,0, depthData.width, depthData.height)     
+				
+				cloneCam = cloneCanvas(camCanvas)
+				ctxCloneCam = cloneCam.getContext('2d')
+				ctxCloneCam.translate(0, dcamera.height);
+				ctxCloneCam.scale(1,-1);
+				ctxCloneCam.drawImage(cloneCam, 0, 0);
+				cloneDepth = encoder.add(cloneCam);
 
-				encoder.add(cloneCanvas(camCanvas));
-				depthEncoder.add(cloneCanvas(depthCanvas));
+				cloneDepth = cloneCanvas(depthCanvas)
+				ctxCloneDepth = cloneDepth.getContext('2d')
+				ctxCloneCam.translate(depthData.width, 0);
+				ctxCloneDepth.rotate(Math.PI / 2);
+				ctxCloneDepth.drawImage(cloneDepth, 0, 0);  
+				depthEncoder.add(cloneDepth);
 
 				if(firstDepth){
 					intrinsics = {
-						depthImageSize: [ depthData.width, parseInt(depthData.height*cutRatio)],
+					
+						// depthImageSize: [ depthData.width, parseInt(depthData.height*cutRatio)],
+						depthImageSize: [ depthData.width, parseInt(depthData.height)],
 						imageSize: [ canvasSize.width, canvasSize.height],
 						geometricScale: scaleGeo,
 					}
+					// depthImageSize:[${depthData.width},${parseInt(depthData.height*cutRatio)}],
 					fileString+= `intrinsics:{
-						depthImageSize:[${depthData.width},${parseInt(depthData.height*cutRatio)}],
+						depthImageSize:[${depthData.width},${parseInt(depthData.height)}],
 						imageSize: [ ${canvasSize.width}, ${canvasSize.height}],
 						geometricScale: ${scaleGeo}
 					}`
