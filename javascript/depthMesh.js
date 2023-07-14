@@ -43,7 +43,7 @@ function init(){
   scene.add(light)
   var ambient = new THREE.AmbientLight( 0x222222 );
   scene.add( ambient );
-  renderer = new THREE.WebGLRenderer( { antialias: true } );
+  renderer = new THREE.WebGLRenderer( );
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.xr.enabled = true;
