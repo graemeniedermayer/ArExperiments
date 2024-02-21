@@ -4,12 +4,17 @@ var imgBitmap = null
 getOrigin = true
 let origin = new THREE.Object3D()
 let  desktopCube, socket;
+let firstPos = new THREE.Vector3()
+let secondPos = new THREE.Vector3()
+let firstQuat = new THREE.Quaternion()
+let secondQuat =new THREE.Quaternion()
+
+let quat270x = new THREE.Quaternion().setFromEuler(new THREE.Euler( 3*Math.PI/2, 0, 0, 'XYZ' ))
 
 //   each frame send to socket.
 
-let quat90x = new THREE.Quaternion().setFromEuler(new THREE.Euler( Math.PI/2, 0, 0, 'XYZ' ))
-
 let clock = new THREE.Clock()
+
 
 // standard webxr scene
 
